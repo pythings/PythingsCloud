@@ -1,0 +1,55 @@
+version: '3'
+services:
+
+  postgres:
+    image: "pythingscloud/postgres"
+    container_name: postgres
+    hostname: postgres
+    environment:
+      - SAFEMODE=False
+    volumes:
+      - ./data/postgres/data:/data    
+      - ./data/postgres/log:/var/log/postgres
+
+  cloud:
+    image: "pythingscloud/cloud"
+    container_name: cloud
+    hostname: cloud
+    environment:
+      - SAFEMODE=False
+      - DJANGO_DEBUG=False
+      - DJANGO_LOG_LEVEL=CRITICAL
+      #- DJANGO_SECRET_KEY=
+      - BACKEND_LOG_LEVEL=ERROR
+      #- BACKEND_EMAIL_SERVICE=
+      #- BACKEND_EMAIL_FROM=
+      #- BACKEND_EMAIL_APIKEY=
+      #- MAIN_DOMAIN_NAME=
+      #- WEBSETUP_DOMAIN_NAME=    
+      #- FAVICONS_PATH= 
+      #- LOGO_FILE=
+      #- CONTACT_EMAIL=
+      #- INVITATION_CODE=
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data/cloud/data:/data
+      - ./data/cloud/log:/var/log/cloud
+
+  proxy:
+    image: "pythingscloud/proxy"
+    container_name: proxy
+    hostname: proxy
+    environment:
+      - SAFEMODE=False
+      #- BACKEND_DOMAIN_NAME=
+      #- MAIN_DOMAIN_NAME=
+    ports:
+      - "80:80"
+      - "443:443"
+
+
+
+
+
+

@@ -1,0 +1,87 @@
+{% load static %} 
+{% include "header.html" %}
+{% include "navigation.html" %}
+
+                {%  load settings_value %}
+                {% settings_value "CONTACT_EMAIL" as CONTACT_EMAIL %}
+                {% settings_value "WEBSETUP_DOMAIN_NAME" as WEBSETUP_DOMAIN_NAME %}
+
+                <!-- Small page start -->
+                <br/>
+                <div class="row">
+                    <div class="col-md-8 offset-md-2">
+                        <div class="card">
+                            <div class="card-body" >
+                                <h1>Sign up</h1>
+                                <hr>
+
+                                
+                                {% if data.status == "activated" %}
+                                <div class='centerbox-success'>
+                                  Ok, account created.
+                                </div>
+
+                                <br/>
+
+                                <p><b>Welcome to Pythings!</b>
+                                
+                                <p style="margin-top:10px"><i class="fa fa-info-circle"></i>&nbsp; As a beta tester, you can configure up to <b><i>10 Things</i></b> and store up to <b><i>1 million messages</i></b>. If you need more, please get in touch at <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a>.</p>
+                                
+                                <p style="margin-top:10px"><i class="fa fa-rocket"></i>&nbsp; Start by clicking on the top-right menu icon to access your <a href="/dashboard/">Dashboard</a>, <a href="/account">Account</a> or the <a href=http://{{WEBSETUP_DOMAIN_NAME}}/websetup">Web Setup</a>.</p>
+
+                                <p style="margin-top:10px">We are happy to have you onboard!</p>
+                                
+                                
+                                {% else %}
+                                
+                                <p><b>Welcome!</b> We are now in closed beta testing, so we can only accept invitation-based new users.</p>
+                                <p style="margin-top:5px">If you have an invitation code with you, you can create a new account straight away by filling the form below, otherwise please get in touch with us at <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a> to request one!</p>
+                                
+                                <br/>
+                                
+                                
+                                {% if data.error%}   
+                                <div class='centerbox-error'>
+                                  {{ data.error }}
+                                </div>
+                                <br/>
+                                {% endif %}
+                                
+                                                                
+                                <div style="text-align:center">
+                                  <form class="form-signin" role="form" action='/register/' method='POST'>
+                                  {% csrf_token %}
+                                  <input style="max-width:300px; margin: 5px auto" type="email" class="form-control" placeholder="Email" name='email' required autofocus>
+                                  <input style="max-width:300px; margin: 5px auto" type="password" class="form-control" placeholder="Password" name='password' required>
+                                  <input style="max-width:300px; margin: 5px auto" type="text" class="form-control" placeholder="Invitation code" name='invitation' required autofocus>
+                                  <p style="font-size:1.0em">
+
+                                  Send me updates as new releases and tutorials&nbsp;
+                                  <input type="checkbox" id="email_updates" name="email_updates" value="True" checked /> &nbsp;
+                                  </p>
+
+                                  <p>
+                                  I accept the <a href="/terms">terms of service</a> and <a href="/privacy">privacy policy</a>&nbsp;
+                                  <input type="checkbox" id="terms_accepted" name="terms_accepted" value="True" required />&nbsp;&nbsp;
+                                  </p>
+                                  <br/>
+                                  
+                                  <input style="width:100px; height:35px; margin: 5px auto; font-size:16px" type='submit' class="btn btn-success" value='Sign up' />
+                                  </form>
+                                </div>
+                                
+                                {% endif %}
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Title area end -->
+    
+
+
+
+
+
+{% include "footer.html" %}
+

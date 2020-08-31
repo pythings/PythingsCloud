@@ -1,0 +1,42 @@
+#!/bin/bash
+set -e
+
+# Check if we are in the right place
+if [ ! -d ./services ]; then
+    echo "You must run this command from the project's root folder."
+    exit 1
+fi
+
+
+# Set service and cacheing
+if [[ "x$1" == "xnocache" ]] ; then
+    NOCACHE=True
+    SERVICE=""
+elif [[ "x$2" == "xnocache" ]] ; then
+    NOCACHE=True 
+    SERVICE=$1
+else
+    NOCACHE=False
+    SERVICE=$1
+fi
+
+if [[ "x$NOCACHE" == "xTrue" ]] ; then
+    BUILD_COMMAND="docker build --no-cache"
+else
+    BUILD_COMMAND="docker build"
+fi
+
+if [[ "x$SERVICE" == "x" ]] ; then
+    
+    # Build all services
+    $BUILD_COMMAND services/base -t pythingscloud/base
+    $BUILD_COMMAND services/cloud -t pythingscloud/cloud
+    $BUILD_COMMAND services/proxy -t pythingscloud/proxy
+    $BUILD_COMMAND services/postgres -t pythingscloud/postgres
+    
+else
+
+    # Build a specific image
+    $BUILD_COMMAND services/$SERVICE -t pythingscloud/$SERVICE
+
+fi

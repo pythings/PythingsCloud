@@ -1,0 +1,88 @@
+{% load static %} 
+{% include "header.html" %}
+{% include "navigation.html" %}
+
+
+
+                <!-- Title area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body pathbar">
+                                Dashboard
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Title area end -->
+
+
+                <!-- Dashboard page area start --> 
+                <div class="row">
+
+                    <!-- ============================ -->
+                    <!-- |   Apps                    | -->
+                    <!-- ============================ -->
+                    <div class="col-lg-6 mt-5">
+                        <div class="card">
+                            <div class="card-body">
+                                <h3>Apps</h3>
+                                <table class="dashboard" style="width:100%; max-width:500px">
+                                {% for app in data.apps %}
+                                <tr>
+                                   <td><a href="/dashboard_app/?intaid={{app.id}}"><b>{{app.name}}</b></a></td>
+                                   <!-- <td class="hideable">AID: {{app.aid}}</td> -->
+                                   <td>Last edit: {{ app.latest_commit_ts }}</td>
+                                </tr>
+                                {% endfor %}
+                                </table>
+                                <br/>
+                                <a href="/new_app/">New App...</a>   
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ============================ -->
+                    <!-- |   Things                 | -->
+                    <!-- ============================ -->
+                    <div class="col-lg-6 mt-5">
+                        <div class="card">
+                            <div class="card-body">
+                                <h3>Things</h3>
+                                {% if data.lastsessions %}
+                                {% include "components/things_list.html" with lastsessions=data.lastsessions minimal=True %}
+                                {% endif %}
+                                <br/>
+                                <a href="/new_thing/">New Thing...</a>     
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Dashboard page area end --> 
+
+
+
+
+
+{% include "components/timezone_note.html" %}
+{% include "footer.html" %}
+
+<script>
+function handleversionselect(){
+    el1 = document.getElementById('uselatest')
+    el2 = document.getElementById('appvers')
+    if (el1.value == 'True'){
+        el2.setAttribute('disabled', 'disabled');
+    }
+        
+    else {
+        el2.removeAttribute('disabled');
+    }
+      
+}
+</script>
+
+
+
+

@@ -1,0 +1,254 @@
+{% load static %} 
+{% include "header.html" %}
+{% include "navigation.html" %}
+
+
+                <!-- Title area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h1>Account</h1>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Title area end -->
+                
+
+
+
+
+
+                <!-- Dashboard page area start --> 
+                <div class="row">
+
+                    <!-- ============================ -->
+                    <!-- |   Basic info             | -->
+                    <!-- ============================ -->
+                    <div class="col-lg-6 mt-5">
+                        <div class="card">
+                            <div class="card-body">
+
+                                <h3>Basic info</h3>
+                                <form action="/account/" method="POST">
+                                {% csrf_token %}
+                                <table class="dashboard">
+                                
+                                <tr>
+                                <td>
+                                <b>Account ID</b>
+                                </td>
+                                <td>
+                                {{data.user.username}} | <a href="/logout">Logout</a>
+                                </td>
+                                </tr>
+                                
+                                <tr>
+                                <td>
+                                <b>Account email</b>
+                                </td>
+                                <td>
+                                {% if data.edit == 'email' %}    
+                                  <table class="frametab"><tr><td>
+                                  <input type='hidden' name='edit' value='email' />
+                                  <input type="email" value="{{data.user.email}}" name='value' style='width:95%' required autofocus />
+                                  </td><td>
+                                  <input type="submit" value="Go">
+                                  </td></tr></table>          
+                                {% else %}
+                                 {{data.user.email}} | <a href="/account/?edit=email">Change</a>
+                                {% endif %}
+                                </td>
+                                </tr>      
+                                
+                                <tr>
+                                <td>
+                                <b>Account password</b>
+                                </td>
+                                <td>
+                                {% if data.edit == 'password' %}    
+                                  <table class="frametab"><tr><td>
+                                  <input type='hidden' name='edit' value='password' />
+                                  <input type="password" name='value' style='width:95%' required autofocus />
+                                  </td><td>
+                                  <input type="submit" value="Go">
+                                  </td></tr></table>          
+                                {% else %}
+                                 ******* | <a href="/account/?edit=password">Change</a>
+                                {% endif %}
+                                </td>
+                                </tr>   
+
+
+                                <tr>
+                                <td>
+                                <b>Email preferences</b>
+                                </td>
+                                <td>
+                                {% if data.edit == 'email_preferences' %}    
+                                  <table class="frametab"><tr><td>
+                                  Account-related<br/>
+                                  Pythings updates
+                                  </td>
+                                  <td>
+                                  <input type='hidden' name='edit' value='email_preferences' />
+                                  <input type='hidden' name='do_update' value='True' />
+                                  <!-- Consider onclick='return false' onkeydown='return false' instead of "disabled" -->
+                                  &nbsp; <input type="checkbox" id="email_admins" name="email_admins" value="True"checked disabled/> &nbsp; <br>
+                                  {% if data.user.profile.email_updates %}
+                                  &nbsp; <input type="checkbox" id="email_updates" name="email_updates" value="True" checked /> &nbsp;
+                                  {% else %}
+                                  &nbsp; <input type="checkbox" id="email_updates" name="email_updates" value="True" /> &nbsp;
+                                  {% endif %}
+                                  </td><td valign="middle">
+                                  <input type="submit" value="Save">
+                                  </td></tr></table>          
+                                {% else %}
+                                  <table class="frametab"><tr><td>
+                                  Account-related<br/>
+                                  Pythings updates
+                                  </td>
+                                  <td>
+                                  &nbsp; <input type="checkbox" id="email_admins" name="email_admins" value="True"checked disabled/> &nbsp; <br>
+                                  {% if data.user.profile.email_updates %}
+                                  &nbsp; <input type="checkbox" id="email_updates" name="email_updates" value="True" checked disabled /> &nbsp; 
+                                  {% else %}
+                                  &nbsp; <input type="checkbox" id="email_updates" name="email_updates" value="True" disabled /> &nbsp;                                   
+                                  {% endif %}
+
+                                  </td><td>
+                                  | <a href="/account/?edit=email_preferences">Change</a>
+                                  </td></tr></table>                                   
+                                {% endif %}
+                                </td>
+                                </tr>   
+
+                              <tr>
+                                <td>
+                                <b>Danger zone</b>
+                                </td>
+                                <td>
+                                {% if data.edit == 'delete_account' %}    
+                                  <table class="frametab"><tr><td>
+                                  <input type='hidden' name='edit' value='delete_account' />
+                                  Type your account ID<br/>
+                                  <input type="text" size=23 name='value' required autofocus />
+                                  </td><td valign="bottom">
+                                  <input type="submit" value="Go" style="margin-bottom:1px">
+                                  </td></tr></table>          
+                                {% else %}
+                                <a href="/account/?edit=delete_account">Delete account</a>
+                                {% endif %}
+                                </td>
+                                </tr>   
+
+                                
+                                </table>
+                                </form>
+                                 
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ============================ -->
+                    <!-- |   Profile                | -->
+                    <!-- ============================ -->
+                    <div class="col-lg-6 mt-5">
+                        <div class="card">
+                            <div class="card-body">
+                                
+                                <h3>Profile</h3>
+                                <form action="/account/" method="POST">
+                                {% csrf_token %}
+                                <table class="dashboard">
+                               
+                                <tr>
+                                <td>
+                                <b>Time Zone</b>
+                                </td>
+                                <td>
+                                
+                                {% if data.edit == 'timezone' %}    
+                                {% include "components/tzselect.html" %}
+                                <input type='hidden' name='edit' value='timezone' />
+                                <input type="submit" value="Go">
+                                {% else %}
+                                {{data.profile.timezone}} | <a href="/account/?edit=timezone">Change</a>
+                                {% endif %}
+                                </td>
+                                </tr>
+                        
+                                <tr>
+                                <td>
+                                <b>Profile type</b>
+                                </td>
+                                <td>
+                                {% if data.edit == 'type' %}    
+                                <select name="value">
+                                <option value="10" selected>Standard</option>
+                                <option value="20">Advanced</option>
+                                </select>
+                                <input type='hidden' name='edit' value='type_id' />
+                                <input type="submit" value="Go">
+                                {% else %}
+                                {{data.profile.type}} | <a href="/account/?edit=type">Change</a>
+                                {% endif %}
+                                </td>
+                                </tr>
+                        
+                                <tr>
+                                <td>
+                                <b>API Key</b>
+                                </td>
+                                <td>
+                                {% if data.edit == 'apikey' %}    
+                                <table class="frametab"><tr><td>
+                                <input type='hidden' name='edit' value='apikey' />
+                                <input type="text" name='value' style='width:95%' required autofocus />
+                                </td><td>(max length=36)
+                                <input type="submit" value="Go">
+                                </td></tr></table>  
+                                {% else %}
+                                {{data.profile.apikey}} | <a href="/account/?edit=apikey">Change</a>
+                                {% endif %}
+                                </td>
+                                </tr>
+                                
+                                <tr>
+                                <td>
+                                <b>Plan type</b>
+                                </td>
+                                <td>
+                                {{data.profile.plan}}
+                                </td>
+                                </tr>
+                                
+                                <tr>
+                                <td valign="top">
+                                <b>Plan usage</b>
+                                </td>
+                                <td>
+                                <i>Things:</i> {{data.devices_usage}}<br>
+                                <i>Messages:</i> {{data.messages_usage}}<br>
+                                </td>
+                                </tr>
+                                
+                                </table>
+                                </form>
+                            
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Dashboard page area end -->
+
+
+
+{% include "footer.html" %}
+
+
+
+
+

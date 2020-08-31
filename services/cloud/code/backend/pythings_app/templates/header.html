@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+
+<!-- This graphical template is originally created by Colorlib (https://colorlib.com/) and it is licensed under The MIT License (MIT) -->
+
+{%  load settings_value %}
+{% settings_value "FAVICONS_PATH" as FAVICONS_PATH %}
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Pythings Cloud</title>
+    {% if FAVICONS_PATH %}
+    <!-- Favicons start--> 
+    <link rel="apple-touch-icon" sizes="180x180" href="{{FAVICONS_PATH}}/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{FAVICONS_PATH}}/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{FAVICONS_PATH}}/favicon-16x16.png">
+    <link rel="manifest" href="{{FAVICONS_PATH}}/site.webmanifest">
+    <link rel="mask-icon" href="{{FAVICONS_PATH}}/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#2b5797">
+    <meta name="theme-color" content="#ffffff">
+    <!-- Favicons end-->
+    {% endif %}
+    
+    {% if refresh %}
+    <meta http-equiv="refresh" content="{{refresh}}" >
+    {% endif %}
+
+    <!-- CSSs -->
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/css/themify-icons.css">
+    <link rel="stylesheet" href="/static/css/metisMenu.css">
+    <link rel="stylesheet" href="/static/css/owl.carousel.min.css">
+    <link rel="stylesheet" href="/static/css/slicknav.min.css">
+
+    <!-- Others css -->
+    <link rel="stylesheet" href="/static/css/typography.css">
+    <link rel="stylesheet" href="/static/css/default-css.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/responsive.css">
+
+    <!-- jquery latest version -->
+    <script src="/static/js/jquery-2.2.4.min.js"></script>
+    <!-- bootstrap 4 js -->
+    <script src="/static/js/popper.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/owl.carousel.min.js"></script>
+    <script src="/static/js/metisMenu.min.js"></script>
+    <script src="/static/js/jquery.slimscroll.min.js"></script>
+    <script src="/static/js/jquery.slicknav.min.js"></script>
+    
+    <!-- Modernizr -->
+    <script src="/static/js/modernizr-2.8.3.min.js"></script>
+
+    <!-- Moment Javascript -->
+    <script src="/static/js/moment-with-locales-2.22.2.js"></script>
+
+    <!-- Date time picker from https://github.com/pingcheng/bootstrap4-datetimepicker -->
+    <script src="/static/js/bootstrap4-datetimepicker-42f3b64.min.js"></script>
+    <link rel="stylesheet" href="/static/css/bootstrap4-datetimepicker-42f3b64.css">
+
+    <!-- Dygraph -->
+    <script type="text/javascript" src="/static/js/dygraph-2.1.0.min.js"></script>
+    <script type="text/javascript" src="/static/js/dygraph_synchronizer-unknown_version.js"></script>
+    <link rel="stylesheet" href="/static/css/dygraph-2.1.0.css">
+    
+     <link href="/static/css/Source_Sans_Pro_Font.css" rel="stylesheet" type="text/css">
+
+    <!-- See also the footer for a few js that need to be placed there (in particular for the preload to work correctly) -->
+
+</head>
+
+
+<body onload="{{onload}}">
+    <!--[if lt IE 8]>
+            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+    <!-- Preloader area start. Now disabled, uncomment to re-enable -->
+    <!-- <div id="preloader">
+        <div class="loader"></div>
+    </div>  -->
+    <!-- Preloader area end -->
+    <!-- Page container area start -->
+    <div class="page-container">
+
+

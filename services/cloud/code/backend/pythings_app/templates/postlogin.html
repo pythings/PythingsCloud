@@ -1,0 +1,47 @@
+{% load static %} 
+{% include "header.html" %}
+{% include "navigation.html" %}
+
+
+
+                <!-- Small page start -->
+                <br/>
+                <div class="row">
+                    <div class="col-md-8 offset-md-2">
+                        <div class="card">
+                            <div class="card-body" >
+                                <h1>Login</h1>
+                                <hr>
+                                {% if data.action == "accept_terms" %}
+                                <h3>New Terms of Service</h3>
+                                
+                                <p>
+                                The Terms of Service and/or Privacy Policy have changed since you last used our service. Please take a moment to review them before continuing: <a href="/terms" target="_blank">Terms of Service</a> | <a href="/privacy" target="_blank">Privacy Policy</a>.
+                                </p>
+                                
+                                <p align="center" style="margin-top:20px">
+                                <a href="?accepted=True">I reviewed them, please don't bug me with this message again.</a>
+                                </p>
+                                {% else %}
+                                
+                                <p align=center><a href="/dashboard">Proceed to the dashboard</a></p>
+                                {% endif%}
+                                
+                             </div>
+
+                                
+                                
+                                
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Small page end -->
+    
+
+
+
+
+
+{% include "footer.html" %}

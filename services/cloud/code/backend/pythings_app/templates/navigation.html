@@ -1,0 +1,86 @@
+        <!-- sidebar menu area start -->
+        {%  load settings_value %}
+        {% settings_value "WEBSETUP_DOMAIN_NAME" as WEBSETUP_DOMAIN_NAME %}
+        {% settings_value "LOGO_FILE" as LOGO_FILE %}
+        <div class="sidebar-menu">
+            <div class="sidebar-header" style="text-align:right">
+                <div class="nav-btn-close" style="margin-top:0px;">
+                    <i class="fa fa-close" style="font-size:2em; color:#ffffff"></i>
+                </div>
+            </div>
+
+            <div class="main-menu">
+                <div class="menu-inner">
+                    <nav>
+                        {% include "custom/navigation.html" %}
+
+                        {% if nossl %}
+                        <div style="margin:50px; color:#ffffff; text-align:center">Exit web setup mode to access the standard menu, i.e. by going to your <a href="{{BASE_PATH}}/dashboard" style="color:#ffffff"><u>dashboard</u></a></div> 
+                           {% else %}
+                        
+                        {% if request.user.is_authenticated %}
+                        <ul class="metismenu">         
+                            <li>
+                                <a href="{{BASE_PATH}}/dashboard"><i class="ti-dashboard"></i><span>Dashboard</span></a>
+                            </li>  
+                            <li>
+                                <a href="{{BASE_PATH}}/account"><i class="ti-user"></i><span>Account</span></a>
+                            </li>  
+                            <li>    
+                            
+                                <a href="http://{{WEBSETUP_DOMAIN_NAME}}/websetup"><i class="ti-panel"></i><span>Web Setup</span></a>
+                            </li>  
+                        </ul>
+                        {% else %}
+                        <ul class="metismenu">
+                            <li>
+                                <a href="{{BASE_PATH}}/register"><i class="ti-user"></i><span>Sign up</span></a>
+                            </li>
+                            <li>
+                                <a href="{{BASE_PATH}}/login"><i class="ti-key"></i><span>Login</span></a>
+                            </li>
+                        </ul>                        
+                        {% endif %}
+                        {% endif %}
+                    </nav>
+                </div>
+            </div>
+        </div>
+        <!-- sidebar menu area end -->
+        <!-- main content area start -->
+        {% if white_background %}
+        <div class="main-content" style="background: #ffffff">    
+        {% else %}
+        <div class="main-content">
+        {% endif %}
+
+            <!-- page title area start -->
+            <div class="page-title-area">
+                <div class="row align-items-center">
+                    <div class="col-sm-12" style="padding-right:0px">
+
+                        <!-- menu button -->
+                        <div class="nav-btn pull-right" style="margin-top:2px; padding-top:10px">
+                            <i class="fa fa-bars" style="font-size:28px"></i>
+                        </div>
+                        
+                        <div class="nav-btn-placeholder pull-right" style="margin-top:0px; padding-top:10px">
+                            <i class="fa fa-bars" style="font-size:2em"></i>
+                        </div>
+                        
+                        <div class="breadcrumbs-area clearfix" style="height:50px; padding-top:10px">
+                        </div>
+                    </div>
+                    {% if not hide_logo %}
+                    {% if LOGO_FILE %}
+                    {% if request.user.is_authenticated %}
+                    <a href="/dashboard"><img src="{{LOGO_FILE}}" style="position: absolute; top: 15px; left: 15px; width:110px" alt="logo"></a>
+                    {% else %} 
+                    <a href="/"><img src="{{LOGO_FILE}}" style="position: absolute; top: 15px; left: 15px; width:110px" alt="logo"></a>                    
+                    {% endif %} 
+                    {% endif %}
+                    {% endif %}    
+                </div>
+            </div>
+            <!-- page title area end -->
+            <div class="main-content-inner col-xl-10  offset-xl-1 ">

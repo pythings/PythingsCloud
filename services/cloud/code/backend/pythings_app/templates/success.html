@@ -1,0 +1,46 @@
+{% load static %} 
+{% include "header.html" %}
+{% include "navigation.html" with main_path='/main/' %}
+
+
+                <!-- Title area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h2>Success</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Title area end -->
+
+                <!-- Success message start  -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <br/>
+                            <div class='centerbox-success'>
+                                {{data.success}}
+                             </div>
+                        
+                            <div class="card-body" style="font-size:16px; margin: 0 auto">
+                            {% if data.redirect_home %}
+                                <a href="/">Go to home</a>
+                            {% else %}
+                               <a href="/dashboard">Go to the dashboard</a>                         
+                            {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Success message end -->
+
+{% include "footer.html" %}
+
+
+
+
+

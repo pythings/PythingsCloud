@@ -1,0 +1,106 @@
+{% load static %} 
+{% include "header.html" %}
+{% include "navigation.html" %}
+
+                <!-- Title area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body pathbar">
+                                <a href="/dashboard/">Dashboard</a> <font style="font-size:0.8em">&gt; Thing <a href="/dashboard_thing/?tid={{data.thing.tid}}&orpool={{ data.orpool }}&intaid={{data.thing.app.id}}" style="font-size:1.0em"><b>{{data.thing.name_short}}</b></a> &gt; Sessions</font>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Title area end -->
+
+                <!-- Thing last sessions area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body">
+                            
+                                <table>
+                                <tr>
+                                <td width="90" align="right">
+                                {% if data.start %}
+                                <a href=?tid={{data.tid}}&orpool={{data.orpool}}&end={{data.start}}&intaid={{data.thing.app.id}}>&lt;- prev</a> &nbsp; |
+                                {% else %}
+                                &lt;- prev &nbsp; |
+                                {% endif %}      
+                                </td>
+                                <td align="left">
+                                {% if data.end %}
+                                &nbsp; <a href=?tid={{data.tid}}&orpool={{data.orpool}}&start={{data.end}}&intaid={{data.thing.app.id}}>next -&gt;</a>
+                                {% else %}
+                                &nbsp; next -&gt;
+                                {% endif %}     
+                                </td>
+                                </table>
+                        	  
+                                <table class="dashboard">
+                                <tr>
+                                <td><b>Active</b></td><td><b>Started</b></td><td><b>Last contact</b></td><td><b>Duration</b></td><td><b>Last Pythings status</b></td><td><b>Last worker status</b></td><td><b>Last management status</b></td><td><b>Pythings version</b></td><td><b>App version</b></td>{% if data.user.profile.type_id  > 10 %}<td><b>Pool</b></td>{% endif %}
+                                </tr>
+                                {% for session in data.sessions %}
+                                <tr>
+                                <td>{{session.active}}</td>
+                                <td>{{session.started}}</td>
+                                <td>{{session.last_contact}}</td>
+                                <td>{{session.duration}}</td>
+                                <td>{{session.last_pythings_status}}</td>
+                                <td>
+                                {% if session.last_worker_status_traceback%}
+                                <br/>{{session.last_worker_status}} - <a id="linkWorkerTB_{{session.count}}" href="javascript:toggle('WorkerTB_{{session.count}}')";>Show traceback</a><br/><br/>
+                                <div id="divWorkerTB_{{session.count}}" style="display: none">
+                                <pre>{{session.last_worker_status_traceback}}</pre> <!-- style="max-width:500px" -->
+                                </div>
+                                {% else %}
+                                {{session.last_worker_status}}  
+                                {% endif %} 
+                                </td>
+                                <td>
+                                {% if session.last_management_status_traceback %}
+                                <br/>{{session.last_management_status}} - <a id="linkManagementTB_{{session.count}}" href="javascript:toggle('ManagementTB_{{session.count}}')";>Show traceback</a><br/><br/>
+                                <div id="divManagementTB_{{session.count}}" style="display: none">
+                                <pre>{{session.last_management_status_traceback}}</pre>
+                                </div>
+                                {% else %}
+                                {{session.last_management_status}}  
+                                {% endif %} 
+                                </td>
+                                <td>{{session.pythings_version}}</td>
+                                <td>{{session.app_version}}</td>
+                                {% if data.user.profile.type_id  > 10 %}<td>{{session.pool.name}}</td>{% endif %}
+                                </tr>
+                                {% endfor %}    
+                                </table>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Thing last sessions area end -->                 
+                
+
+{% include "components/timezone_note.html" %}
+{% include "footer.html" %}
+
+<script language="javascript">
+function toggle(name) {
+    var ele = document.getElementById("div"+name);
+    var text = document.getElementById("link"+name);
+    if(ele.style.display == "block") {
+            ele.style.display = "none";
+        text.innerHTML = "Show traceback";
+    }
+    else {
+        ele.style.display = "block";
+        text.innerHTML = "Hide traceback";
+    }
+} 
+</script>
+
+

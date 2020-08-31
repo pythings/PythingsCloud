@@ -1,0 +1,298 @@
+{% load static %} 
+{% include "header.html" %}
+{% include "navigation.html" %}
+
+
+                <!-- Title area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body pathbar">
+                                 <a href="/dashboard/">Dashboard</a> <font style="font-size:0.8em">&gt; App <b>{{data.app.name}}</b></font> 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Title area end -->
+
+
+                <!-- Dashboard page area start --> 
+                <div class="row">
+
+                    <!-- ============================ -->
+                    <!-- |   Details                | -->
+                    <!-- ============================ -->
+                    <div class="col-lg-6 mt-5">
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="dashboard_noborder" style="margin-top:0px">
+                                <!-- <font style="font-weight:500; font-size:1.2em">Details</font> -->
+                                <tr><td><b>Name:</b></td><td>
+                                {% if data.edit == 'app_name' %}
+                                <form action="/dashboard_app/" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="intaid" value="{{data.app.id}}"> 
+                                <input type="hidden" name="pool" value="{{data.pool.name}}">
+                                <input type="hidden" name="edit" value="app_name" />
+                                <input type="text" name="value" value="{{data.app.name}}" size="25" />
+                                <input type="submit" value="Go">
+                                </form>
+                                {% else %}
+                                {{data.app.name}} | <a href="/dashboard_app/?intaid={{data.app.id}}&pool={{data.pool.name}}&edit=app_name">Change</a>
+                                {% endif %}
+                                </td></tr>
+                                <tr><td><b>ID:</b></td><td>{{data.app.aid}}</td></tr>  
+                                <tr>
+                                <td>
+                                 <b>Last&nbsp;edit:</b>
+                                </td>
+                                <td>
+                                {{data.app_latest_commit_ts}}
+                                </td>
+                                </tr>
+                                <!--  <tr><td><b>Latest version:</b></td><td> {{data.app_latest_commit.name}}</td></tr> -->
+                                <tr><td><b>Tools:</b></td><td><a href="/app_editor/?intaid={{data.app.id}}">Code editor</a></td></tr>
+                                {% if data.action == 'delete' %}
+                                <tr><td colspan="2" style="background-color:#ffee8e; border:1px solid #A9A9A9; padding:5px">WARNING: you are deleting the App named "<b>{{data.app.name}}</b>", this operation will also delete <i>all</i> of its thing data and <u>cannot be undone</u>.</td></tr>
+                                 <tr><td><b>Actions:</b></td><td><a href="/dashboard_app/?intaid={{data.app.id}}"><b>Cancel</b></a> | <a href="/dashboard_app/?intaid={{data.app.id}}&action=delete&confirmed=True">Confirm delete App</a></td></tr>
+                                {% else %}
+                                 <tr><td><b>Actions:</b></td><td><a href="/dashboard_app/?intaid={{data.app.id}}&action=delete">Delete App</a></td></tr>
+                                {% endif %}
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ============================ -->
+                    <!-- |   Settings               | -->
+                    <!-- ============================ -->
+                    <div class="col-lg-6 mt-5">
+                        <div class="card">
+                            {% if data.user.profile.type_id  > 10 %}
+                            <div class="card-body" style="padding-bottom:5px">
+                            {% else %}
+                            <div class="card-body">
+                            {% endif %}
+                            
+                                <!-- Title including pool selection if enabled  -->
+                                <form action="/dashboard_app/" method="POST">
+                                {% csrf_token %}
+                                {% if data.user.profile.type_id  > 10 or data.pool.name != 'development' %}
+                                <b>Settings for pool</b>
+                                <select name="pool" onchange="this.form.submit()">
+                                {% for pool in data.pools %}
+                                {% if pool.name == data.pool.name %}
+                                <option value="{{pool.name}}" selected>{{pool.name}}</option>
+                                {% else %}
+                                <option value="{{pool.name}}">{{pool.name}}</option>
+                                {% endif %}  
+                                {% endfor %}
+                                </select>
+                                <input type="hidden" name="intaid" value="{{data.app.id}}"> 
+                                </form>
+                                {% else %}
+                                <b>Settings</b>
+                                {% endif %}
+                                
+                                <!-- Form and settings table start --> 
+                                <form action="/dashboard_app/" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="intaid" value="{{data.app.id}}"> 
+                                <input type="hidden" name="pool" value="{{data.pool.name}}">        
+                                <table class="dashboard_noborder" style="margin-top: 2px"> 
+                                                                
+                                <!-- Pythings OS version -->
+                                <tr>
+                                <td>&nbsp;Require OS version:</td><td>
+                                {% if data.edit == 'pythings_version' %}    
+                                <input type='hidden' name='edit' value='pythings_version' />
+                                <!-- Dropdown with versions -->
+                                <select name="value" >
+                                {% for version in data.pythings_versions %}
+                                {% if version == data.pool.settings.pythings_version %}
+                                <option value="{{version}}" selected>{% if version == 'factory' %} Factory {% else %} {{version}} {% endif %}</option>
+                                {% else %}
+                                <option value="{{version}}">{% if version == 'factory' %} Factory {% else %} {{version}} {% endif %}</option>
+                                {% endif %}
+                                {% endfor %}
+                                </select>          
+                                <input type="submit" value="Go">        
+                                {% else %}
+                                {% if data.pool.settings.pythings_version == 'factory' %} Factory {% else %} {{data.pool.settings.pythings_version}} {% endif %} | <a href="/dashboard_app/?intaid={{data.app.id}}&pool={{data.pool.name}}&edit=pythings_version">Change</a>
+                                {% endif %}
+                                </td>
+                                </tr>
+                                
+                                <!-- App code version -->                       
+                                <tr>                                
+                                <td>&nbsp;Use code commit:</td><td>
+                                {% if data.edit == 'app_version' %}    
+                                {% if data.pool.use_latest_app_version %}
+                                Use latest: 
+                                <select name="use_latest_app" id="uselatest">
+                                <option value="True" selectd>True</option>
+                                <option value="False">False</option>
+                                </select>
+                                <input type="submit" value="Go">
+                                {% else %}
+                                Use latest:
+                                <select name="use_latest_app" id="uselatest" onchange="handleversionselect()">
+                                <option value="True">True</option>
+                                <option value="False" selected>False</option>
+                                </select>
+                                <input type='hidden' name='edit' value='app_version' />
+                                <select name="value" id="appvers" >
+                                {% for app_version in data.app_versions %}
+                                {% if app_version.cid == data.pool.settings.app_version %}
+                                <option value="{{app_version.cid}}" selected>{%if app_version.tag != None %}{{app_version.cid}} ( {{app_version.tag}}){% else %}{{app_version.cid}}{% endif %} </option>
+                                {% else %}
+                                <option value="{{app_version.cid}}">{%if app_version.tag != None %}{{app_version.cid}} ({{app_version.tag}}){% else %}{{app_version.cid}}{% endif %} </option>
+                                {% endif %}
+                                {% endfor %}
+                                </select>          
+                                <input type="submit" value="Go">
+                                {% endif %}
+                                             
+                                {% else %}
+                                {% if data.pool.settings.app_tag != None %}
+                                {% if data.pool.use_latest_app_version %}
+                                Latest ({{data.app_latest_commit.name}}) | <a href="/dashboard_app/?intaid={{data.app.id}}&pool={{data.pool.name}}&edit=app_version">Change</a>
+                                {% else %}
+                                {{data.pool.settings.app_version}} ({{data.pool.settings.app_tag}}) | <a href="/dashboard_app/?intaid={{data.app.id}}&pool={{data.pool.name}}&edit=app_version">Change</a>
+                                {% endif %}
+                                {% else %}
+                                {% if data.pool.use_latest_app_version %}
+                                Latest ({{data.app_latest_commit.name}}) | <a href="/dashboard_app/?intaid={{data.app.id}}&pool={{data.pool.name}}&edit=app_version">Change</a>
+                                {% else %}
+                                {{data.pool.settings.app_version}} | <a href="/dashboard_app/?intaid={{data.app.id}}&pool={{data.pool.name}}&edit=app_version">Change</a>
+                                {% endif %}
+                                {% endif %}
+                                {% endif %}
+                                </td>
+                                </tr>
+                            
+                                <!-- Management interval -->
+                                <tr>
+                                <td>&nbsp;Management &nbsp;interval:</td>
+                                <td>
+                                {% if data.edit == 'management_interval' %}
+                                <input type="hidden" name="edit" value="management_interval" />
+                                <input type="text" name="value" value="{{data.pool.settings.management_interval}}" size="5" />
+                                <input type="submit" value="Go">
+                                {% else %}
+                                {{data.pool.settings.management_interval}} seconds | <a href="/dashboard_app/?intaid={{data.app.id}}&pool={{data.pool.name}}&edit=management_interval">Change</a><br/>
+                                {% endif %}
+                                </td>
+                                </tr>
+                                 
+                                <!-- Worker interval -->
+                                <tr>
+                                <td>&nbsp;Worker interval:</td>
+                                <td>
+                                {% if data.edit == 'worker_interval' %}
+                                <input type="hidden" name="edit" value="worker_interval" />
+                                <input type="text" name="value" value="{{data.pool.settings.worker_interval}}" size="5" />
+                                <input type="submit" value="Go">
+                                {% else %}
+                                {{data.pool.settings.worker_interval}} seconds | <a href="/dashboard_app/?intaid={{data.app.id}}&pool={{data.pool.name}}&edit=worker_interval">Change</a><br/>
+                                {% endif %}
+                                </td>
+                                </tr>
+                            
+                                <!-- Secure Sockat Layer (SSL) -->
+                                {% if data.profile.type_id  > 10 %}   
+                                <tr>
+                                <td>&nbsp;Use SSL:</td>
+                                <td>
+                                {% if data.edit == 'ssl' %}
+                                <input type="hidden" name="edit" value="ssl" />
+                                <select name=value>
+                                {% if data.pool.settings.ssl %}
+                                <option value="True" selected>True</option>
+                                <option value="False">False</option>
+                                {% else %}
+                                <option value="True">True</option>
+                                <option value="False" selected>False</option>          
+                                {% endif %}
+                                </select>
+                                <input type="submit" value="Go">
+                                {% else %}
+                                {{data.pool.settings.ssl}} | <a href="/dashboard_app/?intaid={{data.app.id}}&pool={{data.pool.name}}&edit=ssl">Change</a><br/>
+                                {% endif %}
+                                </td>
+                                </tr>
+                                {% endif %}
+
+                                <!-- Payload encryption -->
+                                {% if data.profile.type_id  > 10 %}  
+                                <tr>
+                                <td>&nbsp;Use Payload Encyption*:<br></td>
+                                <td>
+                                {% if data.edit == 'payload_encryption' %}
+                                <input type="hidden" name="edit" value="payload_encryption" />
+                                <select name=value>
+                                {% if data.pool.settings.payload_encryption %}
+                                <option value="True" selected>True</option>
+                                <option value="False">False</option>
+                                {% else %}
+                                <option value="True">True</option>
+                                <option value="False" selected>False</option>          
+                                {% endif %}
+                                </select>
+                                <input type="submit" value="Go">
+                                {% else %}
+                                {{data.pool.settings.payload_encryption}} | <a href="/dashboard_app/?intaid={{data.app.id}}&pool={{data.pool.name}}&edit=payload_encryption">Change</a><br/>
+                                {% endif %}
+                                </td>
+                                </tr>
+                                {% endif %}
+                                
+                                <!-- Form and settings table end --> 
+                                </table>
+                                </form>
+                                  
+                                {% if data.profile.type_id  > 10 %}   
+                                <p align="right"><font size=-1>*<i>experimental feature</i></font></p>
+                                {% endif %}     
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Dashboard page area end -->
+
+
+                <!-- Things list area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4>App Things {% if data.user.profile.type_id  > 10 or data.pool.name != 'development' %}for pool {{ data.pool.name }}{% endif %} </h4>
+                                {% include "components/things_list.html" with lastsessions=data.lastsessions hide_app=True %}   
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Things list area end -->
+
+
+{% include "components/timezone_note.html" %}
+{% include "footer.html" %}
+
+<script>
+function handleversionselect(){
+    el1 = document.getElementById('uselatest')
+    el2 = document.getElementById('appvers')
+    if (el1.value == 'True'){
+        el2.setAttribute('disabled', 'disabled');
+    }      
+    else {
+        el2.removeAttribute('disabled');
+    }     
+}
+</script>
+
+
+
+

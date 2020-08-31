@@ -1,0 +1,310 @@
+{% load static %} 
+{% include "header.html" %}
+{% include "navigation.html" %}
+
+<!-- START  javascripts -->
+<script src="/static/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script type="text/javascript">
+
+Save = function(reload) {
+
+    // Init...
+    var resultDiv = $("#resultDivContainer");
+    var lastEditDiv = $("#lastEdit");
+    resultDiv.text('Saving...')
+    lastEditDiv.text('Saving...')
+    
+    var reload=reload
+    
+    var editor = ace.edit("editor");
+    
+    $(function () {
+        $.ajaxSetup({
+            headers: { "X-CSRFToken": "{{csrf_token}}" }
+        });
+    });  
+    
+    $.ajax({
+        url: "/api/web/v1/ide/uploadfile",
+        type: "POST",
+        data: { name: "{{data.file.name}}", intaid:"{{data.app.id}}", version: null, content: editor.getValue()},
+        dataType: "json",
+        success: function (result) {
+            switch (result) {
+                case true:
+                    if (reload) {
+                        window.location.assign(window.location.href+"&savednew=True")
+                        resultDiv.text('Saved as new, reloading...')
+                    }
+                    else {
+                    	lastEditDiv.html('<font style="font-size:14px">Last edit: Now &nbsp;</font>')
+                        resultDiv.text('Saved.')
+                    }
+                    break;
+                default:
+                    if (reload) {
+                        window.location.assign(window.location.href+"&savednew=True")
+                        resultDiv.text('Saved as new, reloading...')
+                    }
+                    else {
+                        lastEditDiv.html('<font style="font-size:14px">Last edit: Now &nbsp;</font>')
+                        //lastEditDiv.text('Now1')
+                        resultDiv.text('Saved.')
+                    }
+                    
+            }
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+        resultDiv.text(xhr.status+thrownError);
+        }
+    });
+};
+
+</script>
+<!-- END  javascripts -->
+
+
+                <!-- Title area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body pathbar">
+                                <a href="/dashboard/">Dashboard</a><font style="font-size:0.8em"> &gt; App <a href="/dashboard_app/?intaid={{data.app.id}}" style="font-size:1.0em"><b>{{data.app.name}}</b></a> &gt Code Editor</font>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Title area end -->
+
+                <!-- Simple page area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12"> <!-- <div class="col-lg-6 mt-5"> -->
+                        <div class="card">
+                            <div class="card-body">
+
+
+        <!-- START commit browser (for small screens) -->
+        <div class="showable">
+          <center>
+            <form action="/app_editor" method="get">
+            <b>Commit:</b> <input type="hidden" name="intaid" value="{{data.app.id}}">
+            <select name="cid" onchange="this.form.submit()">
+
+           {% for commit in data.commits %}
+               {% if commit.cid == data.cid %}
+                   {% if data.commit.cid == None %}
+                       <option value="{{commit.cid}}">{%if commit.tag != None %}tag:{{commit.tag}} ({{commit.cid}}){% else %}{{commit.cid}}{% endif %}</option>
+                   {% else %}
+                      {%if commit.cid == data.commit.cid %}
+                          <option value="{{commit.cid}}" selected>{%if commit.tag != None %}tag:{{commit.tag}} ({{commit.cid}}){% else %}{{commit.cid}}{% endif %}</option>
+                      {% else %}
+                          <option value="{{commit.cid}}">{%if commit.tag != None %}tag:{{commit.tag}} ({{commit.cid}}){% else %}{{commit.cid}}{% endif %}</option>
+                      {% endif %} 
+                   {% endif %} 
+               {% else %}
+                   <option value="{{commit.cid}}">{%if commit.tag != None %}tag:{{commit.tag}} ({{commit.cid}}){% else %}{{commit.cid}}{% endif %}</option>
+               {% endif %}  
+            {% endfor %}
+             </select>
+             </form>
+           </center>
+           <br/>
+         </div>
+       
+       
+
+
+
+        <!-- START commit menu -->
+        <table class="app_editor-header" style="margin: 0 auto; max-width:640px; width:100%">
+         <tr>
+          <td align="center"><b>Files</b></td>
+          <td align="center"><b>Status</b></td>
+          <!--  <td align="center"><b>Branch</b></td> -->
+          <td align="center" class="hideable"><b>Commit</b></td>
+         </tr>
+
+         <tr>
+          <td>
+           
+           {% for file_name, file_id in data.app_committed_files.items %}
+            {%if file_id == data.fileid %}<b>{% endif %}
+            <a href="?intaid={{data.app.id}}&fileid={{file_id}}&cid={{data.cid}}">/{{file_name}}</a><br/>
+            {%if file_id == data.fileid %}</b>{% endif %}
+           {% endfor %}
+           
+           {%if data.global_app_uncommitted_files|length != 0 %}<font size="-1"><br/>Changes not committed:</font><br/>{% endif %}
+           {% for file in data.global_app_uncommitted_files %}
+            {%if file.id == data.fileid %}<b>{% endif %}
+            <a href="?intaid={{data.app.id}}&fileid={{file.id}}&cid={{data.cid}}">/{{file.name}}</a><br/>
+            {%if file.id == data.fileid %}</b>{% endif %}
+           {% endfor %}
+
+          </td>
+          <td valign="top" align="center">
+          {% if not data.editable %}
+              Browsing history.<br/>
+              <font style="font-size:14px">Select last commit to commit or tag</font>
+          {% else %}
+          {% if data.global_app_uncommitted_files|length != 0 %}
+
+              Uncommitted changes
+              <form action="/app_editor" method="get">
+              <input type="hidden" name="intaid" value="{{data.app.id}}">
+              <input type="hidden" name="commit" value="True"> 
+              <button class="simplebutton" type="button" onclick="this.form.submit()">Commit</button>
+              </form>
+          
+          {% else %}
+          
+              Everything committed
+
+              <form action="/app_editor" method="get">
+              <input type="hidden" name="intaid" value="{{data.app.id}}">
+              <input type="hidden" name="cid" value="{{data.cid}}">
+                
+                {%if data.tagop == 'create' %}
+                  {%if data.tagname == None %}
+                   <input type="hidden" name="tagop" value="create">
+                   <input type="text" name="tagname" value="" placeholder="Tag name" size=10>
+                   <button class="simplebutton" type="button" onclick="this.form.submit()">Go</button>
+                  {% else %}
+                   <input type="hidden" name="tagop" value="edit">
+                   <button class="simplebutton" type="button" onclick="this.form.submit()">Edit tag</button>
+                  {% endif %} 
+                {% elif data.tagop == 'edit' %}
+                  {%if data.tagname == None %}
+                   <input type="hidden" name="tagop" value="edit">
+                    {%if data.commit.tag != None %}
+                     <input type="text" name="tagname" value="{{data.commit.tag}}" size=10>
+                    {% else %}
+                     <input type="text" name="tagname" value="" placeholder="Tag name" size=10>
+                    {% endif %} 
+                   <button class="simplebutton" type="button" onclick="this.form.submit()">Go</button>
+                  {% else %}
+                   <input type="hidden" name="tagop" value="edit">
+                   <button class="simplebutton" type="button" onclick="this.form.submit()">Edit tag</button>
+                  {% endif %}                 
+                
+                {% else %}
+                   {%if data.commit.tag != None %}
+                    <input type="hidden" name="tagop" value="edit">
+                    <button class="simplebutton" type="button" onclick="this.form.submit()">Edit tag</button>
+                  {% else %}     
+                  <input type="hidden" name="tagop" value="create">
+                  <button class="simplebutton" type="button" onclick="this.form.submit()">Create tag</button>
+                  {% endif %} 
+               
+              {% endif %} 
+              </form>
+             
+          {% endif %}
+          {% endif %}
+
+           
+          </td>
+
+          <td valign="top" align="center" class="hideable">
+            <form action="/app_editor" method="get">
+            <input type="hidden" name="intaid" value="{{data.app.id}}">
+            <select name="cid" onchange="this.form.submit()">
+
+           {% for commit in data.commits %}
+               {% if commit.cid == data.cid %}
+                   {% if data.commit.cid == None %}
+                       <option value="{{commit.cid}}">{%if commit.tag != None %}tag:{{commit.tag}} ({{commit.cid}}){% else %}{{commit.cid}}{% endif %}</option>
+                   {% else %}
+                      {%if commit.cid == data.commit.cid %}
+                          <option value="{{commit.cid}}" selected>{%if commit.tag != None %}tag:{{commit.tag}} ({{commit.cid}}){% else %}{{commit.cid}}{% endif %}</option>
+                      {% else %}
+                          <option value="{{commit.cid}}">{%if commit.tag != None %}tag:{{commit.tag}} ({{commit.cid}}){% else %}{{commit.cid}}{% endif %}</option>
+                      {% endif %} 
+                   {% endif %} 
+               {% else %}
+                   <option value="{{commit.cid}}">{%if commit.tag != None %}tag:{{commit.tag}} ({{commit.cid}}){% else %}{{commit.cid}}{% endif %}</option>
+               {% endif %}  
+            {% endfor %}
+             </select>
+             </form>
+          </td>
+         </tr>
+
+        <!-- END commit menu -->
+        </table>
+        <br />
+
+
+        
+        
+        
+                            {%if data.fileid %}
+                            
+                            
+                            <!-- START editor menu bar -->
+                            <table style="border:1px solid #c0c0c0; background-color: #e5e5e5; border-spacing: 0px; border-collapse: separate; margin: 0 auto; max-width:640px; width:100%">
+                             <tr>
+                              <td style="border:0; width:55px">
+                              
+                               {%if data.editable %}
+                                {%if data.file.committed %}
+                                <button class="simplebutton" type="button" onclick="Save(reload=true)">Save</button>
+                                {% else %}
+                                <button class="simplebutton" type="button" onclick="Save(reload=false)">Save</button>
+                               {% endif %}
+                               {% else %}
+                               <button class="simplebutton" type="button" disabled>Save</button>
+                               {% endif %}        
+           
+                               
+                              </td>
+                              <td style="border:0">
+                              <div id="resultDivContainer">
+                              {%if not data.editable %}
+                              <font style="font-size:14px">Note: save allowed only when working on last commit.</font>
+                              {% endif %}
+                              </div>   
+                              </td>
+                              <td align="right" style="border:0">
+                              <div id="lastEdit">
+                              <font style="font-size:14px">Last edit: {{data.file.ts}} &nbsp;</font>
+                              </div>
+                              </td>
+                             </tr>
+                            </table>
+                            
+                            <!-- END editor menu bar -->
+                            
+                            <!-- START Editor body  -->
+                            <pre id="editor" style="width:100%">{{data.file.content}}</pre>
+                            <div class="scrollmargin"></div>
+                            
+                            <script>
+                                var editor = ace.edit("editor");
+                                editor.setTheme("ace/theme/chrome");
+                                editor.session.setMode("ace/mode/python");
+                                editor.setAutoScrollEditorIntoView(true);
+                                editor.setOption("maxLines", Infinity);
+                            </script>
+                            <!-- END Editor body  -->
+                            {% endif %}        
+        
+        
+        
+        
+        
+        
+        
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Simple page area end -->
+
+{% include "components/timezone_note.html" %}
+
+{% include "footer.html" %}
+

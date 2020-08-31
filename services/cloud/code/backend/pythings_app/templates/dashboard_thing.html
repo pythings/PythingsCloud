@@ -1,0 +1,610 @@
+{% load static %} 
+{% include "header.html" with refresh=data.refresh %}
+{% include "navigation.html" %}
+
+                <!-- Title area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body pathbar">
+                                  <a href="/dashboard/">Dashboard</a> <font style="font-size:0.8em">&gt; Thing <b>{{data.thing.name_short}}</b></font>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Title area end -->
+
+                <!-- Dashboard page area start --> 
+                <div class="row">
+
+                    <!-- ============================ -->
+                    <!-- |   Info                   | -->
+                    <!-- ============================ -->
+                    <div class="col-lg-6 mt-5">
+                        <div class="card">
+                            <div class="card-body">
+      
+                                <!-- Thing name -->
+                                <table class="dashboard_noborder">   
+                                <tr><td><b>Name:</b></td><td>
+                                {% if data.edit == 'name' %}
+                                <form action="" method="POST">
+                                {% csrf_token %}  
+                                <table class="frametab"><tr><td>
+                                <input type='hidden' name='edit' value='name' />
+                                <input type="text" value="{{data.thing.name_short}}" name='name' style='width:95%' required autofocus />
+                                </td><td>
+                                <input type="submit" value="Go">
+                                </form>
+                                </td></tr></table>          
+                                {% else %}
+                                {{data.thing.name_short}} | <a href="?tid={{data.thing.tid}}&edit=name&intaid={{data.thing.app.id}}">Edit</a>
+                                {% endif %}
+                                </td></tr>
+                                
+                                <!-- Thing ID -->
+                                <tr><td><b>ID:</b></td>
+                                <td>
+                                {{data.thing.tid}}
+                                </td></tr>
+
+                                <!-- Thing type -->
+                                <tr><td><b>Type:</b></td>
+                                <td> 
+                                {% if data.simulator %}
+                                {{ data.thing.platform }} Simulator
+                                {% else %}
+                                {% if not data.thing.platform %}
+                                Unknown
+                                {% else %}
+                                {{ data.thing.platform }}
+                                {% endif %}
+                                {% endif %}
+                                </td></tr>                                 
+
+                                <!-- Thing OS -->
+                                <tr><td><b>OS:</b></td>
+                                <td> 
+                                PythingsOS {{data.session.pythings_version}}
+                                </td></tr>                                
+
+                                <!-- Thing App -->
+                                <tr><td><b>App:</b></td><td>
+                                {% if data.thing.app.hidden %}
+                                None
+                                {% else %}
+                                <a href="/dashboard_app/?intaid={{data.thing.app.id}}">{{data.thing.app.name}}</a>
+                                {% endif %}
+                                </td></tr>
+
+                                <!-- Thing status -->
+                                <tr><td><b>Status:&nbsp;</b></td><td>{{data.connection_status | safe }} 
+                                <!--  {% if data.simulator.status %}<font size=-1>(Simulator {{data.simulator.status}})</font> {% endif %} -->
+                                </td></tr> 
+                                
+                                <!-- Thing Pool -->
+                                {% if data.profile.type_id  > 10 %} 
+                                <tr><td><b>Pool: &nbsp;</b></td><td>
+                                <form action="" method="get">
+                                <a href="/dashboard_app/?pool={{data.thing.pool.name}}&intaid={{data.thing.app.id}}">{{data.thing.pool.name}}</a> | Change to:
+                                <select name="pool" onchange="this.form.submit()">
+                                {% for pool in data.pools %}
+                                {% if pool.name == data.thing.pool.name %}
+                                <option value="{{pool.name}}" selected>{{pool.name}}</option>
+                                {% else %}
+                                <option value="{{pool.name}}">{{pool.name}}</option>
+                                {% endif %}  
+                                {% endfor %}
+                                </select>
+                                <input type="hidden" name="tid" value="{{data.thing.tid}}">
+                                <input type="hidden" name="intaid" value="{{data.thing.app.id}}">
+                                <input type="hidden" name="orpool" value="{{data.orpool}}">
+                                </form> 
+                                </td></tr>
+                                {% endif %}
+                                </table>
+                                 
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <!-- ============================ -->
+                    <!-- |   Diagnostics            | -->
+                    <!-- ============================ -->
+                    <div class="col-lg-6 mt-5">
+                        <div class="card">
+                            <div class="card-body">
+
+                                <div style="margin-top:0px">
+                                <b>Diagnostics:</b>
+                                </div>
+
+                                <!--  Pythings OS status  -->
+                                <div style="margin-top:2px">
+                                &nbsp; &nbsp;PythingsOS:
+                                {% if data.thing_status == 'ONLINE' %}
+                                {% if data.session.last_pythings_status.1 == 'K' %}
+                                    <font color="limegreen">{{data.session.last_pythings_status}}</font>
+                                {% else %}
+                                    <font color="red">{{data.session.last_pythings_status}}</font>
+                                {% endif %}
+                                {% else %}
+                                N.A.
+                                {% endif %}                                
+                                | <a href="/dashboard_sessions?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}">sessions</a>
+                                </div>
+                                     
+                                <!--  Worker Status  -->
+                                <div style="margin-top:3px">     
+                                &nbsp; &nbsp;Worker:
+                                {% if data.thing_status == 'ONLINE' %}
+                                {% if data.session.last_worker_status_traceback %}
+                                <font color="red">NOK</font> - <a id="linkWorkerTB" href="javascript:toggle('WorkerTB')">Show error</a>
+                                {% else %}
+                                {% if data.session.last_worker_status.1 == 'K' %}
+                                <font color="limegreen">{{data.session.last_worker_status}}</font>
+                                {% else %}
+                                <font color="orange">{{data.session.last_worker_status}}</font>
+                                {% endif %} 
+                                {% endif %}
+                                {% else %}
+                                N.A.
+                                {% endif %}
+                                | <a href="/dashboard_messages?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&type=worker&start=0">messages</a>
+                                <div id="divWorkerTB" style="display: none; background:#f0f0f0; margin:0px; padding:0px; width:100%">
+                                <pre style="margin:0; padding:0">{{data.session.last_worker_status_traceback}}</pre>
+                                </div>
+                                </div>
+                                
+                                <!--  Management status  -->
+                                <div style="margin-top:3px">
+                                &nbsp; &nbsp;Management:
+                                {% if data.thing_status == 'ONLINE' %}
+                                {% if data.session.last_management_status_traceback %}
+                                <font color="red">NOK</font> - <a id="linkManagementTB" href="javascript:toggle('ManagementTB')">Show error</a> 
+                                {% else %}
+                                {% if data.session.last_management_status.1 == 'K' %}
+                                <font color="limegreen">{{data.session.last_management_status}}</font>
+                                {% else %}
+                                <font color="orange">{{data.session.last_management_status}}</font>
+                                {% endif %}
+                                {% endif %}
+                                {% else %}
+                                N.A.
+                                {% endif %}
+                                | <a href="/dashboard_messages?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&type=management&start=0">messages</a>
+                                <div id="divManagementTB" style="display: none; background:#f0f0f0; margin-left:5px; padding:5px; width:80%">
+                                <pre>{{data.session.last_management_status_traceback}}</pre>
+                                </div>
+                                </div>   
+                                                                     
+                                <!--  Thing Actions  -->
+                                <table class="dashboard_noborder" style="margin-top:10px; margin-bottom:0px">
+                                {% if data.action == 'remove' %}
+                                <tr>
+                                <td colspan="2" style="background-color:#ffee8e; border:1px solid #A9A9A9; padding:5px">
+                                WARNING: you are deleting the Thing with ID "<b>{{data.thing.tid}}</b>", 
+                                <br/> this operation will delete <i>all</i> of its data and cannot be undone.
+                                </td>
+                                </tr>
+                                {% endif%}
+                                <tr>
+                                <td valign="top"><b>Actions: &nbsp;</b></td><td>
+                                {% if data.action == 'remove' %}
+                                <a href="/dashboard_thing/?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}"><b>Cancel</b></a> |
+                                <a href="/dashboard_thing/?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&action=remove&confirmed=True">Confirm delete Thing</a> 
+                                <br/>
+                                {% elif data.action == 'uninstall' %}
+                                <a href="/dashboard_thing/?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&action=uninstall&confirmed=True">Confirm uninstall</a> |
+                                <a href="/dashboard_thing/?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}">Cancel</a> 
+                                <br/>
+                                <font size="-1">This action will uninstall the current App on this Thing. App data on the cloud will not be deleted.</font>
+                                {% elif data.action == 'install' %}
+                                <form method="GET" action="/dashboard_thing/">
+                                <input type="hidden" name="tid" value="{{data.thing.tid}}">
+                                <input type="hidden" name="intaid" value="{{data.thing.app.id}}">
+                                <input type="hidden" name="orpool" value="{{data.orpool}}">
+                                <input type="hidden" name="action" value="install">
+                                Install App:
+                                <select name="confirmed">
+                                {% for app in data.apps %}
+                                <option value="{{app.id}}">{{app.name}}</option>
+                                {% endfor %}
+                                </select>
+                                <input type="submit" value="install"> |
+                                <a href="/dashboard_thing/?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}">Cancel</a>
+                                </form>
+                                {% else %}
+                                {% if data.thing.app.hidden %}
+                                <a href="/dashboard_thing/?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&action=install"> Install App </a> | 
+                                {% else %}
+                                {% if data.thing.app_set_via == 'backend' %}
+                                <a href="/dashboard_thing/?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&action=uninstall">Uninstall App</a> | 
+                                {% else %}
+                                <font color="#a0a0a0">Uninstall App</font> |
+                                {% endif %}
+                                {% endif %}
+                                <a href="/dashboard_thing/?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&action=remove">Delete</a>   
+                                {% if data.simulator %}
+                                |
+                                {% if data.simulator.status == "Running" %}
+                                <font color="#c0c0c0">Start</font> | <a href=/dashboard_thing/?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&action=stop>Stop</a> 
+                                {% else %}
+                                <a href=/dashboard_thing/?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&action=start>Start</a> | <font color="#c0c0c0">Stop</font> 
+                                {% endif %}
+                                {% endif %}
+                                <br />
+                                {% endif %}
+                                </td>
+                                </tr>
+                                <tr>
+                                <td valign="top"><b>Tools: &nbsp;</b></td><td>
+                                <a href="/remote_shell?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&type=management&start=0">Remote Shell</a>
+                                {% if data.simulator %}
+                                {% if data.simulator.status == "Running" %}
+                                | <a href=/simulator_log?sid={{data.simulator.sid}}>Remote screen</a>
+                                {% else %}
+                                | <font color="#c0c0c0">Remote screen</font>  
+                                {% endif %}
+                                {% endif %}
+                                </td>
+                                </tr>
+                                </table>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Dashboard page area end --> 
+
+                <!-- Last sessions and messages area start -->
+                {% if data.profile.type_id  > 10 %}
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body">
+                            
+                                <!-- Thing last sessions -->
+                                <h3>Last sessions</h3> 
+                                <table class="dashboard">
+                                <tr>
+                                <td><b>Active</b></td><td><b>Started</b></td><td><b>Last contact</b></td><td><b>Duration</b></td><td><b>Last PythingsOS status</b></td><td><b>Last worker status</b></td><td><b>Last management status</b></td><td><b>Versions</b></td><td><b>Pool</b></td><td><b>Extra</b></td>
+                                </tr>
+                                {% for session in data.sessions %}
+                                <tr>
+                                <td>{{session.active}}</td>
+                                <td>{{session.started}}</td>
+                                <td>{{session.last_contact}}</td>
+                                <td>{{session.duration}}</td>
+                                <td>{{session.last_pythings_status}}</td>
+                                <td>
+                                {% if session.last_worker_status_traceback%}
+                                <br/>{{session.last_worker_status}} - <a id="linkWorkerTB_{{session.count}}" href="javascript:toggle('WorkerTB_{{session.count}}')";>Show traceback</a><br/><br/>
+                                <div id="divWorkerTB_{{session.count}}" style="display: none">
+                                <pre>{{session.last_worker_status_traceback}}</pre> <!-- style="max-width:500px" -->
+                                </div>
+                                {% else %}
+                                {{session.last_worker_status}}  
+                                {% endif %} 
+                                </td>
+                                <td>
+                                {% if session.last_management_status_traceback %}
+                                <br/>{{session.last_management_status}} - <a id="linkManagementTB_{{session.count}}" href="javascript:toggle('ManagementTB_{{session.count}}')";>Show traceback</a><br/><br/>
+                                <div id="divManagementTB_{{session.count}}" style="display: none">
+                                <pre>{{session.last_management_status_traceback}}</pre> <!-- style="max-width:500px" -->
+                                </div>
+                                {% else %}
+                                {{session.last_management_status}}  
+                                {% endif %} 
+                                </td>
+                                <td>PythingsOS:{{session.pythings_version}}<br>App:{{session.app_version}}</td>
+                                <td>{{session.pool.name}}</td>
+                                <td>Key:{{session.kty}}<br/>Frozen:{{session.thing.frozen_os}}</td>
+                                </tr>
+                                {% endfor %}    
+                                </table>
+                                <a href="/dashboard_sessions?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}">View all</a>
+                                <br />
+                                <br />
+                                
+                                <!-- Thing last worker messages -->
+                                <h3>Last worker messages</h3> 
+                                <table class="dashboard">
+                                <tr>
+                                <td><b>Timestamp</b></b></td><td><b>Content</b></td>
+                                </tr>
+                                {% for last_msg in data.last_worker_msgs %}
+                                <tr>  
+                                <td>{{last_msg.ts}}</td><td>{{last_msg.msg}}</td>
+                                </tr>
+                                {% endfor %} 
+                                </table>
+                                <a href="/dashboard_messages?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&type=worker&start=0">View more</a>
+                                <br />
+                                <br />
+                                
+                                <!-- Thing last management messages -->
+                                <h3>Last management messages</h3> 
+                                <table class="dashboard">
+                                <tr>
+                                <td><b>Timestamp</b></b></td></td><td><b>Status</b></td></td><td><b>Content</b></td></td><td><b>Reply</b></td>
+                                </tr>
+                                {% for message in data.last_management_msgs %}
+                                <tr>  
+                                <td>{{message.ts}}</td><td>{{message.status}}</td><td>{{message.data}}</td><td>{{message.reply}}</td>
+                                </tr>
+                                {% endfor %} 
+                                </table>
+                                <a href="/dashboard_messages?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&type=management&start=0">View all</a>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                <!-- Thing last sessions area end -->                
+          
+                <!-- Anchor for quick data access when changing with quicklinks -->
+                <a name="{{data.last}}"></a>
+
+                <!-- Thing data area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body thing-data-menu">
+                                                        
+                                <h3>Thing Data</h3>
+                                <br/>
+                                <form method="GET" action="/dashboard_thing#None">
+                                
+                                <!-- Date time picker start -->
+                                <table>
+                                 <tr>
+                                  <td style="border: 0 !important;">
+                                    <div style="padding: 3px; width:210px; height:30px">
+                                        <div class="form-group"> 
+                                            <div class='input-group date' id='datetimepicker6'>
+                                                From:&nbsp;
+                                                <input type='text' class="form-control" name="from" style="height: 22px"/>
+                                                <span class="input-group-addon" style="padding:0px 8px">
+                                                    <span class="glyphicon glyphicon-calendar"></span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="padding: 3px; width:210px; height:30px">
+                                        <div class="form-group">
+                                            <div class='input-group date' id='datetimepicker7'>
+                                                To: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                                <input type='text' class="form-control" name="to" style="height: 22px"/>
+                                                <span class="input-group-addon" style="padding:0px 8px">
+                                                    <span class="glyphicon glyphicon-calendar"></span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                   </td>
+                                   <td style="border: 0 !important;" valign="middle">  
+                                    <input type=submit value="Go" style="margin-bottom:8px"> 
+                                   </td>
+                                  </tr>
+                                 </table>
+                                    
+                                <input type=hidden name="orpool" value="{{data.orpool}}">
+                                <input type=hidden name="tid" value="{{data.thing.tid}}">
+                                <input type="hidden" name="intaid" value="{{data.thing.app.id}}">
+
+                                <script type="text/javascript">
+                                    $(function () {
+                                        from_moment=moment.utc('{{data.from_dt_utcfake_str}}')
+                                        //console.log(from_moment)
+                                        $('#datetimepicker6').datetimepicker({
+                                            defaultDate: from_moment,
+                                            allowInputToggle: true,
+                                            locale: 'en-gb'
+                                        });
+                                        to_moment=moment.utc('{{data.to_dt_utcfake_str}}')
+                                        //console.log(to_moment)
+                                        $('#datetimepicker7').datetimepicker({
+                                            defaultDate: to_moment,
+                                            allowInputToggle: true,
+                                            locale: 'en-gb',
+                                            useCurrent: false //Important! See issue #1075
+                                        });
+                                        $("#datetimepicker6").on("dp.change", function (e) {
+                                            $('#datetimepicker7').data("DateTimePicker").minDate(e.date);
+                                        });
+                                        $("#datetimepicker7").on("dp.change", function (e) {
+                                            $('#datetimepicker6').data("DateTimePicker").maxDate(e.date);
+                                        });
+                                    });
+                                </script>
+                                <!--  Date time picker end -->
+                            
+                            
+                                <!--  Quick links  -->
+                                <br/>
+                                &nbsp;Show last: 
+                            
+                                {% if data.last == "10m" %}
+                                    10m |
+                                {% else %}
+                                    <a href="/dashboard_thing?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&last=10m#10m">10m</a> |
+                                {% endif %}
+                                
+                                {% if data.last == "1h" %}
+                                    1h |
+                                {% else %}
+                                    <a href="/dashboard_thing?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&last=1h#1h">1h</a> |
+                                {% endif %}
+                             
+                                {% if data.last == "1d" %}
+                                    1d |
+                                {% else %}
+                                    <a href="/dashboard_thing?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&last=1d#1d">1d</a> |
+                                {% endif %}
+                            
+                                {% if data.last == "1W" %}
+                                    1W |
+                                {% else %}
+                                    <a href="/dashboard_thing?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&last=1W#1W">1W</a> |
+                                {% endif %}
+                            
+                                {% if data.last == "1M" %}
+                                   1M |
+                                {% else %}
+                                    <a href="/dashboard_thing?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&last=1M#1M">1M</a> |
+                                {% endif %}
+                             
+                                {% if data.last == "1Y" %}
+                                    1Y
+                                {% else %}
+                                    <a href="/dashboard_thing?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&last=1Y#1Y">1Y</a>
+                                {% endif %}
+                                </form>
+  
+                                <!-- Aggregation/zoom info boxes -->
+                                <div style="margin-top: 10px; margin-bottom:10px">
+                                {% if data.aggregated %}
+                                &nbsp; <i class="fa fa-exclamation-triangle"></i> Datapoints have been aggregated by a factor of {{data.aggregate_by}} to speed up plotting.<br/>
+                                {% endif %}
+                                <span id="nowshowing"></span>
+                                </div>
+                                
+                            </div>
+                            
+                            <!-- Dygraphs area -->
+                            <div class="card-body thing-data-graphs">
+                                {% for metric,metric_simple in data.metrics.items %}
+                                &nbsp;&nbsp;&nbsp;&nbsp;<b>{{metric}}</b>
+                                <div id="chart_{{metric}}" style="width:100%"></div>
+                                <br />
+                                {% endfor %}
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                <!-- Thing data area end -->    
+
+{% include "components/timezone_note.html" %}
+{% include "footer.html" %}
+
+
+<script type="text/javascript">
+nowshowing = document.getElementById("nowshowing");
+gs = [];
+ref_minX = null
+ref_maxX = null
+
+// Status-hacks
+justreset=false
+last_op = ''
+
+function dblclickwrapper(event, g, context){
+    Dygraph.defaultInteractionModel.dblclick(event, g, context)
+    nowshowing.innerHTML = ''
+    console.log('resetted')
+    justreset = true
+    if (last_op == 'zoom'){
+        justreset = false    	
+    }
+}
+
+function myEndZoom(event, g, context){
+    console.log('endzoom')
+}
+
+// Overwrite
+Dygraph.endZoom = myEndZoom
+
+// Clone the interaction model so we don't mess up with the original dblclick mehtod that might cause a recursive call
+var myInteractionModel = Object.assign({}, Dygraph.defaultInteractionModel);
+
+// Assign wrappers to interaction model
+myInteractionModel.dblclick=dblclickwrapper
+
+function nullfunction(){}
+
+// Disable touch interaction (moves bu default, we don't want that)
+myInteractionModel.touchstart=nullfunction
+myInteractionModel.touchend=nullfunction
+myInteractionModel.touchmove=nullfunction
+
+{% for metric,metric_data in data.timeseries.items %}
+
+g = new Dygraph(
+        		document.getElementById("chart_{{metric}}"),
+        		{% if data.aggregated %}
+                "Timestamp,{{metric}}\n{% for datapoint in metric_data %}{{datapoint.0}},{{datapoint.2}};{{datapoint.1}};{{datapoint.3}}\n{%endfor%}}",
+                {% else %}
+                "Timestamp,{{metric}}\n{% for datapoint in metric_data %}{{datapoint.0}},{{datapoint.1}}\n{%endfor%}}",
+                {% endif %}
+                {
+                  drawCallback: function(g, is_initial){
+                	  console.log('draw')
+                	  last_op='draw'
+                  },
+                  zoomCallback: function(minX, maxX, yRanges) {
+                	  last_op='zoom'
+                	  from_dt = new Date(minX)  
+                	  from_day_str   = ("0" + from_dt.getDate()).slice(-2)
+                	  from_month_str = ("0" + (from_dt.getMonth()+1)).slice(-2) 
+                	  from_year_str  = from_dt.getFullYear()
+                	  from_hours_str  = ("0" + from_dt.getHours()).slice(-2) 
+                      from_minutes_str  = ("0" + from_dt.getMinutes()).slice(-2) 
+                      from_seconds_str  = ("0" + from_dt.getSeconds()).slice(-2) 
+                	  from_str = from_day_str  +"/"+ from_month_str +"/"+ from_year_str  + " " + from_hours_str + ":" + from_minutes_str + ":" + from_seconds_str;
+         	  
+                      to_dt = new Date(maxX)  
+                      to_day_str   = ("0" + to_dt.getDate()).slice(-2)
+                      to_month_str = ("0" + (to_dt.getMonth()+1)).slice(-2) 
+                      to_year_str  = to_dt.getFullYear()
+                      to_hours_str  = ("0" + to_dt.getHours()).slice(-2) 
+                      to_minutes_str  = ("0" + to_dt.getMinutes()).slice(-2) 
+                      to_seconds_str  = ("0" + to_dt.getSeconds()).slice(-2) 
+                      to_str = to_day_str  +"/"+ to_month_str +"/"+ to_year_str  + " " + to_hours_str + ":" + to_minutes_str + ":" + to_seconds_str;
+    
+                      if (!justreset){
+                	  nowshowing.innerHTML = "&nbsp; <i class=\"fa fa-info-circle\" style=\"font-size: 1.1em;\"></i> Now showing data between " + from_str + " and " + to_str + ". <a href=/dashboard_thing?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&from_t=" + minX/1000 + "&to_t=" + maxX/1000 + "#None>Load only this portion <i class=\"fa fa-chevron-right\" style=\"font-size: 0.7em;\"></i></a> ";}
+                      {
+                    	  justreset=false
+                      }
+    
+                  },
+                  
+                  dateWindow: [ Date.parse("{{data.from_dt.year}}/{{data.from_dt.month}}/{{data.from_dt.day}} {{data.from_dt.hour}}:{{data.from_dt.minute}}:{{data.from_dt.second}}"), Date.parse("{{data.to_dt.year}}/{{data.to_dt.month}}/{{data.to_dt.day}} {{data.to_dt.hour}}:{{data.to_dt.minute}}:{{data.to_dt.second}}") ],
+                  drawGrid: true, drawPoints:true, strokeWidth: 1.5, pointSize:2.0, highlightCircleSize:4, stepPlot: false, fillGraph: false, fillAlpha: 0.5, colorValue: 0.5, showRangeSelector: false, interactionModel: myInteractionModel,  includeZero: false, {% if data.aggregated %}customBars: true,{% endif %} animatedZooms:true
+                })
+  
+gs.push(g)
+{% endfor %}
+
+var sync = Dygraph.synchronize(gs, {zoom: true, selection: false, range: false});
+
+</script>
+
+<script language="javascript">
+function toggle(name) {
+    var ele = document.getElementById("div"+name);
+    var text = document.getElementById("link"+name);
+    if(ele.style.display == "block") {
+            ele.style.display = "none";
+        text.innerHTML = "Show error";
+    }
+    else {
+        ele.style.display = "block";
+        text.innerHTML = "Hide error";
+    }
+} 
+</script>
+
+
+
+
+
+

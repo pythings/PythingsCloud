@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Use dev (local) database for backend if not already set up
+if [ ! -f services/cloud/db_conf.sh ]; then
+    echo "Setting up dev database settings."
+    cp services/cloud/db_conf-dev.sh  services/cloud/db_conf.sh
+else
+    echo "Not setting up dev database settings as already present."
+fi
+
+
+# Use dev certificates if not already set up
+if [ ! -d services/proxy/certificates ]; then
+    echo "Setting up dev certificates."
+    cp -a services/proxy/certificates-dev  services/proxy/certificates
+else
+    echo "Not setting up dev certificates as already present."
+fi
+
+
+# Use dev docker-compose.yml if not already set up
+if [ ! -f docker-compose.yml ]; then
+    echo "Setting up dev docker-compose.yml"
+    cp docker-compose-dev.yml docker-compose.yml
+else
+    echo "Not setting up dev docker-compose.yml as already present."
+fi
+
+# Use dev keys if not already set up
+if [ ! -f services/cloud/privkey.key ]; then
+    echo "Setting up dev keys"
+    cp services/cloud/privkey-dev.key services/cloud/privkey.key
+    cp services/cloud/pubkey-dev.key services/cloud/pubkey.key
+else
+    echo "Not setting up dev keys as already present."
+fi

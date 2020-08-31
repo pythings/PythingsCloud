@@ -1,0 +1,122 @@
+{% load static %} 
+{% include "header.html" %}
+{% include "navigation.html" %}
+
+
+                <!-- Simple page area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12">
+                        <div class="card">
+                            <div class="card-body docs">
+                            
+                                <h1>New App</h1> 
+                                <hr>
+                                <br/>
+                        
+                                {% if not data.app_name %}
+                                <p style="margin-top:10px; margin-bottom:0px">
+                                <b>Choose your new App name and set its base settings.</b><br/><br/>You can learn more, including how to install PythingsOS and this App on your devices, in the <a href="/documentation/">documentation</a>.<br/><br/>
+                                </p>          
+                                <div style="text-align: center">
+                                <form action="/new_app/" method="POST">
+                                <div style="margin: 0 auto; display:inline-block">
+                                <div style="text-align: left">
+                                {% csrf_token %}
+                                <input type="hidden" name="intaid" value="{{data.app.id}}"> 
+                                <input type="hidden" name="pool" value="{{data.pool.name}}">
+                                  
+                                <table class="dashboard">
+                            
+                                 <tr>
+                                  <td><b>App name </b></td>
+                                  <td>
+                                   <input type="text" name="app_name" value="" placeholder="Your new App name" size="17" />
+                                  </td>
+                                 </tr>
+                            
+                                 <tr>
+                                  <td style="max-width:400px">
+                                   <b>Worker interval</b><br>
+                                   <font size="-1"><i>The time PythingsOS will wait between calling the worker tasks.</i></font>
+                                  </td>
+                                  <td>
+                                   <input type="text" name="worker_interval" value="300" size="5" /> seconds<br/>
+                                  </td>
+                                 </tr>
+                        
+                                 <tr>
+                                  <td style="max-width:420px">
+                                   <b>Management interval</b><br/>
+                                   <font size="-1"><i>The time PythingsOS will wait between calling the management tasks (and check for new commands, settings and updates from the Cloud).</i></font>
+                                  </td>
+                                  <td>
+                                   <input type="text" name="management_interval" value="60" size="5" /> seconds
+                                  </td>
+                                 </tr>
+                        
+                                 <tr>
+                                  <td style="max-width:400px">
+                                   <b>Use latest App version</b><br/>
+                                   <font size="-1"><i>Should the Cloud push the latest version of this App to the Things where you installed it, when there is a new one available?</i></font>
+                                  </td>
+                                  <td>
+                                   <input type="checkbox" name="uselatest" value="true" checked>
+                                  </td>
+                                 </tr>
+                                   
+                                 <tr>
+                                  <td style="max-width:400px">
+                                   <b>Require OS version</b><br/>
+                                   <font size="-1"><i>If your App needs a specific version of PythingsOS, you can set it here. Leave it to "factory" to use the preinstalled one. Note that setting a specific version might trigger an automatic PythingsOS update.</i></font> 
+                                  </td>
+                                  <td>
+                                    <!-- Dropdown with versions -->
+                                    <select name="pythings_version" >
+                                    {% for version in data.pythings_versions %}
+                                    <option value="{{version}}">{{version}}</option>
+                                    {% endfor %}
+                                    </select>          
+                                  </td>
+                                 </tr>
+                                 
+                                </table>
+                                <br />
+                                </div>
+                                <input type="submit" value="Create">
+                                </form>
+                                </div>
+                                </div>
+                          
+                                {% else %}
+                                <h3>Success</h3> 
+                                Ok, created a new App named "<b>{{data.app_name}}</b>". Go back to your <a href="/dashboard/">Dashboard</a> to continue.
+                                {% endif %} 
+  
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Simple page area end -->
+
+{% include "footer.html" %}
+
+<script>
+function handleversionselect(){
+    el1 = document.getElementById('uselatest')
+    el2 = document.getElementById('appvers')
+    if (el1.value == 'True'){
+        el2.setAttribute('disabled', 'disabled');
+    }
+        
+    else {
+        el2.removeAttribute('disabled');
+    }
+      
+}
+
+</script>
+
+
+
+

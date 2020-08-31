@@ -1,0 +1,38 @@
+{% load static %} 
+{% include "header.html" %}
+{% include "navigation.html" %}
+
+
+                <!-- Simple page area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body">
+                            
+                                <h4 class="header-title mb-0"></h4>
+       
+                                <h3>Apps</h3>
+                                <br />
+                                <table class="dashboard">
+                                {% for app in data.apps %}
+                                <tr>
+                                   <td><a href="/dashboard_app/?intaid={{app.id}}"><b>{{app.name}}</b></a></td><td>AID: {{app.aid}}</td>
+                                </tr>
+                                {% endfor %}
+                                </table>
+                                <br/>
+                                <a href="/create_app/">Add new..</a>    
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Simple page area end -->
+
+{% include "footer.html" %}
+
+
+
+
+

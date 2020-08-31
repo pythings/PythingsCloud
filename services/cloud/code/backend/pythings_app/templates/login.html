@@ -1,0 +1,61 @@
+{% load static %} 
+{% include "header.html" %}
+{% include "navigation.html" %}
+
+
+
+                <!-- Small page start -->
+                <br/>
+                <div class="row">
+                    <div class="col-md-8 offset-md-2">
+                        <div class="card">
+                            <div class="card-body" >
+                                <h1>Login</h1>
+                                <hr>
+                                                   
+                                {% if data.error %}
+                                <div class='centerbox-error'>
+                                  {{ data.error }}
+                                </div>
+                                {% elif data.success %}
+                                <div class='centerbox-success'>
+                                  {{data.success}}
+                                </div>
+                                {% else %}            
+                                <br/>
+                                {% endif %} 
+                                
+                                                               
+                                <div style="text-align:center">
+                                  <form class="form-signin" role="form" action='/login/' method='POST'>
+                                    {% csrf_token %}
+
+                                    <input style="max-width:300px; margin: 5px auto" type="username" class="form-control" placeholder="Email" name='username' required autofocus>
+                                    <input style="max-width:300px; margin: 5px auto" type="password" class="form-control" placeholder="Password" name='password'>
+                                    <br />
+                                    <input style="width:100px; height:35px; margin: 5px auto; font-size:16px" type='submit' class="btn btn-success" value='Log in' />
+                                    
+
+                                  </form>
+                                {% if not data.success %}
+                                <br/><b>Forgot password?</b> Just leave it empty and click "Log in" to get a login link by email!
+                                {% endif %}     
+
+                                </div>
+
+                                
+                                
+                                
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Small page end -->
+    
+
+
+
+
+
+{% include "footer.html" %}

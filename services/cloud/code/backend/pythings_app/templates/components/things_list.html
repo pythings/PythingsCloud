@@ -1,0 +1,86 @@
+      <table class="dashboard">
+       <tr>
+        <td align="center">
+        <b>Name or ID</b>
+        </td>
+        {% if not hide_app %}
+        <td align="center" class="hideable">
+        <b>App</b>
+        </td>
+        {% endif %}
+        {% if not minimal %}
+        <td align="center" class="hideable">
+        <b>Versions</b>
+        </td>
+        <td align="center" class="hideable">
+        <b>Last contact</b>
+        </td>
+        {% endif %}
+        <td align="center">
+        <b>Connection status</b>
+        </td>
+        <td align="center" class="hideable">
+        <b>Tasks status</b>
+        </td>
+       </tr>
+       {% for session in lastsessions %}
+       <tr>
+        <td>
+        <a href="/dashboard_thing?tid={{session.thing.tid}}&intaid={{session.thing.app.id}}&orpool={{data.pool.name}}">{{session.thing.name_short}}</a>
+        </td>
+        {% if not hide_app %}
+        <td class="hideable">
+        {% if session.thing.app.hidden %}
+        None
+        {% else %} 
+        <a href="/dashboard_app?intaid={{session.thing.app.id}}">{{session.thing.app.name}}</a>
+        {% if session.thing.user.profile.type_id  > 10 %}
+        <br><font size=-1>(Pool: {{session.thing.pool.name}})</font>
+        {% endif %}
+        {% endif %}
+        </td>
+        {% endif %}
+        {% if not minimal %}
+        <td class="hideable">
+        <!-- App: <a href="/app_editor/?intaid={{session.thing.app.id}}&cid={{session.app_version}}">{{session.app_version}}</a><br/> -->
+        App: {{session.app_version}}<br/>
+        PythingsOS: {{session.pythings_version}}
+        </td>
+        <td class="hideable">
+        {{session.last_contact}}
+        </td>
+        {% endif %}
+        <td align="center">
+        {{ session.connection_status|safe }}
+        </td>
+        <td align="center" class="hideable">
+        {% if session.thing_status == 'ONLINE' %}
+        {{ session.global_status|safe }}
+        {% else %}
+        N.A.
+        {% endif %}
+        </td>
+       {% endfor %}
+      </table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

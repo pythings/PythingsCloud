@@ -1,0 +1,33 @@
+{% load static %} 
+{% include "header.html" %}
+{% include "navigation.html" %}
+
+
+                <!-- Title area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h2>Success</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Title area end -->
+
+                <!-- Delete message start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body" style="font-size:16px; margin: 0 auto">
+                                Successfully deleted App "{{ data.appname }}". <a href="/dashboard">Go to the dashboard</a>. 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Delete message end -->
+
+{% include "footer.html" %}
+

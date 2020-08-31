@@ -1,0 +1,100 @@
+{% load static %} 
+{% include "header.html" %}
+{% include "navigation.html" %}
+
+
+                <!-- Title area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body pathbar">
+                                <a href="/dashboard/">Dashboard</a> <font style="font-size:0.8em">&gt; Thing <a href="/dashboard_thing/?tid={{data.thing.tid}}&orpool={{ data.orpool }}&intaid={{data.thing.app.id}}" style="font-size:1.0em"><b>{{data.thing.name_short}}</b></a> &gt; {% if data.type == 'worker' %}Worker{% else %}Management{% endif %} messages</font>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Title area end -->
+
+
+                <!-- Thing messages area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body">
+                            
+                                {% if data.type == 'worker' %}
+                                <!-- Worker messages -->
+                                
+                    	        <table class="dashboard">
+                    	        <tr>
+                    	        <td><b>Timestamp</b></b></td><td><b>Content</b></td>
+                    	        </tr>
+                    	        {% for message in data.messages %}
+                    	        <tr>  
+                    	        <td>{{message.ts}}</td><td>{{message.data}}</td>
+                    	        </tr>
+                    	        {% endfor %} 
+                                </table>
+                                
+                                {% else %}
+                                <!-- Management messages -->
+                                
+                                <table>
+                                <tr>
+                                <td width="90" align="right">
+                                {% if data.start %}
+                                <a href=?tid={{data.tid}}&orpool={{data.orpool}}&end={{data.start}}&type={{data.type}}&intaid={{data.thing.app.id}}>&lt;- prev</a> &nbsp; | 
+                                {% else %}
+                                &lt;- prev &nbsp; |
+                                {% endif %}      
+                                </td>
+                                <td align="left">
+                                {% if data.end %}
+                                &nbsp <a href=?tid={{data.tid}}&orpool={{data.orpool}}&start={{data.end}}&type={{data.type}}&intaid={{data.thing.app.id}}>next -&gt;</a>
+                                {% else %}
+                                &nbsp next -&gt;
+                                {% endif %}               
+                                </td> 
+                                </table>
+                                <table class="dashboard">
+                                <tr>
+                                <td><b>Timestamp</b></b></td></td><td><b>Status</b></td></td><td><b>UUID</b></td><td><b>Content</b></td></td><td><b>Reply</b></td>
+                                </tr>
+                                {% for message in data.messages %}
+                                <tr>  
+                                <td>{{message.ts}}</td><td>{{message.status}}</td><td>{{message.uuid}}</td><td>{{message.data}}</td><td>{{message.reply}}</td>
+                                </tr>
+                                {% endfor %} 
+                                </table>
+                              
+                                <br/>
+                                <h3>Create new </h3>       
+                                <table><tr><td>Content:</td><td>
+                                <form action="/dashboard_messages/" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="orpool" value="{{data.orpool}}">
+                                <input type='hidden' name='tid' value='{{data.thing.tid}}' />
+                                <input type='hidden' name='intaid' value='{{data.thing.app.id}}' />
+                                <input type='hidden' name='generated_uuid' value='{{data.generated_uuid}}' />
+                                <input type='hidden' name='type' value='management' />
+                                <input type='text' name='new_msg' value='' />
+                                <input type="submit" value="Go"> 
+                                </form>
+                                </td>
+                                </tr>
+                                </table>
+                                {% endif %}
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Thing messages area end -->                 
+                
+
+
+{% include "components/timezone_note.html" %}
+{% include "footer.html" %}
+

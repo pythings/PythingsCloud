@@ -1,0 +1,42 @@
+{% load static %} 
+{% include "header.html" %}
+{% include "navigation.html" %}
+
+
+                <!-- Title area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h2>Error</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Title area end -->
+
+                <!-- Error message start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <br/>
+                            <div class='centerbox-error'>
+                                {{data.error}}
+                             </div>
+                        
+                            <div class="card-body" style="font-size:16px; margin: 0 auto">
+                                <a href="/dashboard">Go to the dashboard</a>. 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Error message end -->
+
+{% include "footer.html" %}
+
+
+
+
+

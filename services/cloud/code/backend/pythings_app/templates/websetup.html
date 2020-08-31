@@ -1,0 +1,554 @@
+{% load static %} 
+{% include "header.html" %}
+{% include "navigation.html" with BASE_PATH=data.BASE_PATH nossl=True %}
+            
+                <!-- The Modal -->
+                <div id="modalDiv" class="modal-loading" style="display:block">
+                    
+                    <!-- Modal Image (Image src) -->
+                    <img class="modal-content" id="modalImg" src="/static/img/ajax-loader.gif" style="margin-top:90px; height:32px; width:32px;">
+                  
+                    <!-- Modal Caption (Image Alt) -->
+                    <div id="modalCaption" class="modal-loading-caption" >Checking connection...</div>
+                </div>
+                
+                <!-- Simple page area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12">
+                        <div class="card">
+                            <div class="card-body">
+                            
+                           
+      <h2>Thing Web Setup</h2>
+      
+      <hr>
+
+      <h3>Info</h3>
+      <table class="noborder">
+       <tr><td>Thing ID:</td><td><div id="TIDDiv">Unknown</div></td></tr>
+       <tr><td>Platform:</td><td><div id="PlatformDiv">Unknown</div></td></tr>
+       <tr><td>WebSetup:</td><td><span id="ConnSpan" style="font-weight:500"><font color=#c0c0c0>Not&nbsp;connected</font></span></td></tr>
+       
+      </table>
+      
+      <h4 style="margin-top:35px;">Set Wi-Fi</h4>
+      <table>
+
+       <tr>
+        <td width="55px">Status:</td><td><div id="WiFiDiv"><font color=#c0c0c0><b>Unknown</b></font></div></td>
+        <!-- <td>&nbsp; | <a href="#" onclick="check_wifi()">check connection</a></td>  -->
+       </tr>
+      </table>
+      
+      <table>
+      
+       <tr>
+        <td>
+         <input id="essid" type="text" placeholder="essid" size=15>
+         <input id="password" type="text" placeholder="password" size=15 style="-webkit-text-security: disc;}">
+         <button class="simplebutton" type="button" onclick="join_wifi()">Join</button>
+         <button class="simplebutton" type="button" onclick="scan_wifi()">Scan</button>
+         <button class="simplebutton" type="button" onclick="check_wifi()">Check</button>
+        </td>
+       </tr>
+       <tr><td><font size="-1">Your password will not be sent to our Cloud, but directly to your Thing.</font></td></tr>
+      </table>
+      
+      <table>
+       <tr>
+        <td><div id="ScanDiv" style="margin-top:8px"></div></td>
+       </tr>
+
+      </table>
+
+      <h4 id="set_apn_title" style="margin-top:30px; display:none">Set cellular network</h4>
+      <table id="set_apn_table" style="display:none; margin-bottom:45px; ">
+       <tr><td width="55px">Status:</td><td><div id="APNDiv"><font color=#c0c0c0><b>Unknown</b></font></div></td></tr>
+       <tr>
+        <td colspan=2>
+         <input id="apn" type="text" placeholder="APN" size=35>
+         <button class="simplebutton" type="button" onclick="set_apn()">Set</button>
+        </td>
+       </tr>
+      </table>
+
+
+      <h4 style="margin-top:30px">Set Account or App ID</h4>
+      <table>
+       <tr><td width="55px">Status:</td><td><div id="AIDDiv"><font color=#c0c0c0><b>Unknown</b></font></div></td></tr>
+       <tr>
+        <td colspan=2>
+         <input id="aid" type="text" placeholder="Account or App ID" size=35>
+         <button class="simplebutton" type="button" onclick="set_app()">Set</button>
+        </td>
+       </tr>
+       <tr><td colspan=2><font size="-1">For security reasons, you have to manually copy/paste your Account or App ID.</font></td></tr>
+      </table>
+
+      <br/>
+      <iframe frameborder=0 src={{data.BASE_PATH}}/list_apps width="100%" height="300" style="max-width:700px; margin-top:2px"></iframe>
+
+  
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Simple page area end -->
+
+{% include "footer.html" %}
+
+
+
+
+
+<script type="text/javascript">
+
+
+
+// Init...
+var ConnSpan = $("#ConnSpan");
+var WiFiDiv = $("#WiFiDiv");
+var PlatformDiv = $("#PlatformDiv");
+var ScanDiv = $("#ScanDiv");
+var StatusDiv = $("#StatusDiv");
+var AIDDiv  = $("#AIDDiv");
+var APNDiv  = $("#APNDiv");
+var TIDDiv  = $("#TIDDiv");
+
+// Connection status
+connected  = false
+processing = false
+
+// Default action is check
+cmd  = 'check'
+args = {}
+
+aid      = ''
+essid    = ''
+password = ''
+
+apn      = ''
+
+
+function show_loading(text){
+    
+    // Get modal parts
+    var modalDiv     = document.getElementById('modalDiv');
+    var modalImg     = document.getElementById("modalImg");
+    var modalCaption = document.getElementById("modalCaption"); 
+    
+    modalDiv.style.display = "block";
+    //modalImg.src = ""
+    modalCaption.innerHTML = text;
+
+}
+
+function hide_loading(){
+    var modalDiv = document.getElementById('modalDiv');
+    modalDiv.style.display = "none";
+}
+
+
+//-----------------------------------
+// Call API logic
+//-----------------------------------
+
+call_api = function() {
+    
+    if (cmd == 'join' || cmd == 'check_wifi'){
+        timeout = 30000
+    }
+    else {
+        timeout = 3000
+    }
+    
+    if (cmd == 'join'){
+        data= { cmd: cmd, essid: essid, password:password}
+    }
+    else if (cmd =='set_app'){
+        data= { cmd: cmd, aid: aid}
+    }
+    else if (cmd =='set_apn'){
+        data= { cmd: cmd, apn: apn}
+    }
+    else{
+        data= { cmd: cmd, args: args}
+    }
+    
+    processing = true
+
+    //$(function () {
+    //    $.ajaxSetup({
+    //        headers: { "X-CSRFToken": "test-token" }
+    //    });
+    //});  
+    
+    $.ajax({
+        url: "http://192.168.4.1",
+        timeout: timeout ,
+        type: "GET",
+        crossDomain: true,
+        data: data,
+        dataType: "json",
+        success: function (result) {
+                
+                processing = false
+                connected=true
+                hide_loading();
+                ConnSpan.html('<font color=limegreen><b>Connected</b></font><button class="simplebutton" type="button" onclick="exit_websetup()">Close</button>')
+                
+                // Check cmd response
+                if (cmd == 'check'){
+
+                	// Info WiFi and AID divs
+                	PlatformDiv.html("<b>"+result.platform+"</b>")
+                	if (result.essid) {
+                	    WiFiDiv.html("<b>Configured on \""+result.essid+"\"</b>")
+                	} else {
+                        WiFiDiv.html("<b>Not configured</b>")
+                		
+                	}
+                    if (result.aid) {
+                    	AIDDiv.html("<b>Configured with \""+result.aid+"\"</b>")
+                    } else {
+                    	AIDDiv.html("<b>Not configured</b>")
+                        
+                    }
+            
+                    TIDDiv.html("<b>"+result.tid+"</b>")
+                    
+                    // Cellular network?
+                    if (result.platform.endsWith('sim800')) {
+                    	document.getElementById("set_apn_title").style.display = "block"
+                    	document.getElementById("set_apn_table").style.display = "block"
+                        if (result.apn) {
+                            APNDiv.html("<b>Configured with APN \""+result.apn+"\"</b>")
+                        } else {
+                            APNDiv.html("<b>Not configured</b>")
+                            
+                        }
+
+                    }
+                }
+
+                
+                // Check_wifi cmd response
+                else if (cmd == 'check_wifi'){
+                	if (result.essid){
+                        if (result.isconnected){
+                            WiFiDiv.html("<font color=limegreen><b>Configured on \""+result.essid+"\" and connected</b></font>")
+                        }
+                        else {
+                        	
+                            WiFiDiv.html("<font color=red><b>Configured on \""+result.essid+"\" but not connected</b></font>")
+                        }
+                	} else {
+                        WiFiDiv.html("<b>Not configured</b>")
+                	}
+                }
+
+                // Scan cmd response
+                else if (cmd == 'set_app'){
+                    AIDDiv.html("<b>Configured with \""+result.aid+"\"</b>")
+                }               
+
+                // Scan cmd response
+                else if (cmd == 'set_apn'){
+                    APNDiv.html("<b>Configured with APN \""+result.apn+"\"</b>")
+ 
+                } 
+                
+                // Scan cmd response
+                else if (cmd == 'scan'){
+                    ScanDiv.html('<b>Networks found:</b><br />')
+                    
+                    for (var i = 0; i < result.length; i++){
+                        var obj = result[i];
+                        for (var key in obj){
+                            var attrName = key;
+                            var attrValue = obj[key];
+                            if (attrName==0) { // 0 is the index of the net in the list of net scan
+                                ScanDiv.append(attrValue)
+                            }
+                            if (attrName==3) { // 3 is the index of the signal in the list of net scan
+                                ScanDiv.append(' ('+attrValue+' dBm)<br/>')
+                            }
+                        }
+                    }
+                        
+                    //ScanDiv.text(JSON.stringify(result, null, 2))
+                    
+                }
+                
+                // Join cmd response
+                else if (cmd == 'join'){
+                    if (result.isconnected){
+                        WiFiDiv.html("<font color=limegreen><b>Connected on "+result.essid+"</b></font>")
+                    }
+                    else {
+                        WiFiDiv.html("<font color=red><b>Not connected</b></font>")
+                    }         
+                }
+                
+                // Exit cmd response
+                else if (cmd == 'close'){
+                    //console.log('Ok, closed')
+                    show_loading('Closing connection...')                   
+                }                
+
+                // Not exisstend cmd
+                else {
+                    
+                }
+                
+                // Reset cmd switching back to check
+                StatusDiv.text('None')
+                if (cmd != 'close'){
+                    hide_loading()
+                }
+                
+                cmd  = 'check'
+                args = {}
+
+                
+
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            processing = false
+            // Report Error. If net error also update as "Not connecetd"" 
+            if (thrownError=='timeout' || xhr.status == 0 ) {
+                cmd  = 'check'
+                args = {}
+                connected = false
+                ConnSpan.html('<font color=#c0c0c0>Not&nbsp;connected</font>')
+                StatusDiv.text('Checking connection...')
+                show_loading('Checking connection...<br/><br><center><div style="max-width:400px"><i>Put your Thing in Web Setup mode (i.e. press reset) and join its Wi-Fi (Thing_XXXXXXXXXXXX) within 1 minute.</i></div></center>')
+                
+                // Reset
+                aid      = ''
+                essid    = ''
+                password = ''
+                WiFiDiv.html('<font color=#c0c0c0><b>Unknown</b></font>')
+                ScanDiv.text('')
+                AIDDiv.html('<font color=#c0c0c0><b>Unknown</b></font>')
+                PlatformDiv.text('Unknown')
+                // Reset 
+            }
+            else {
+                StatusDiv.append(' - FAILED (http '+xhr.status+'; '+thrownError+')');
+                show_loading(' - FAILED (http '+xhr.status+'; '+thrownError+')')
+                cmd  = 'check'
+                args = {}
+            }
+        }
+    });
+};
+
+
+
+//-----------------------------------
+// Check Wi Fi
+//-----------------------------------
+check_wifi = function() {
+
+ if (! connected) {
+     alert("You are not connected, cannot send command")
+     return
+ }  
+ 
+ if (cmd != "check") {
+     alert("There is already a command pending, please wait for it to be processed before sending another one.")
+     return
+ }
+ 
+ StatusDiv.text('Checking Wi-Fi status... (30 seconds)')
+ show_loading('Checking Wi-Fi status... (30 seconds)')
+ 
+ cmd = 'check_wifi'
+ args  = {}
+ return
+ 
+};
+
+
+
+//-----------------------------------
+// Scan Wi Fi
+//-----------------------------------
+scan_wifi = function() {
+
+    if (! connected) {
+        alert("You are not connected, cannot send command")
+        return
+    }  
+    
+    if (cmd != "check") {
+        alert("There is already a command pending, please wait for it to be processed before sending another one.")
+        return
+    }
+    
+    StatusDiv.text('Scanning Wi-Fi Newtworks...')
+    show_loading('Scanning Wi-Fi Newtworks...')
+    
+    cmd = 'scan'
+    args  = {}
+    return
+    
+};
+
+//-----------------------------------
+// Exit from Web Setup
+//-----------------------------------
+
+exit_websetup = function() {
+    
+    if (! connected) {
+        alert("You are not connected, cannot send command")
+        return
+    }
+    
+    if (cmd != "check") {
+        alert("There is already a command pending, please wait for it to be processed before sending another one.")
+        return
+    }
+
+    StatusDiv.text('Closing WebSetup mode')
+    show_loading('Closing WebSetup mode')
+
+    cmd  = 'close'
+    args = {}
+    return
+
+};
+
+
+//-----------------------------------
+// Connect Wi Fi
+//-----------------------------------
+join_wifi = function() {
+
+    if (! connected) {
+        alert("You are not connected, cannot send command")
+        return
+    }   
+    
+    if (cmd != "check") {
+        alert("There is already a command pending, please wait for it to be processed before sending another one.")
+        return
+    }   
+    essid    = document.getElementById('essid').value
+    password = document.getElementById('password').value
+    StatusDiv.text('Joining Wi-Fi Network "'+ essid +'"... (30 seconds)')
+    show_loading('Joining Wi-Fi Network "'+ essid +'"... (30 seconds)')
+    
+
+    cmd  = 'join'
+    args = {essid: essid, password: password}
+    return
+
+};
+
+
+//-----------------------------------
+// Set App
+//-----------------------------------
+set_app = function() {
+
+if (! connected) {
+  alert("You are not connected, cannot send command")
+  return
+}  
+
+if (cmd != "check") {
+  alert("There is already a command pending, please wait for it to be processed before sending another one.")
+  return
+}
+
+StatusDiv.text('Setting AID...')
+show_loading('Setting AID...')
+
+cmd = 'set_app'
+aid = document.getElementById('aid').value
+args  = {}
+return
+
+};
+
+//-----------------------------------
+//Set APN
+//-----------------------------------
+set_apn = function() {
+
+if (! connected) {
+alert("You are not connected, cannot send command")
+return
+}  
+
+if (cmd != "check") {
+alert("There is already a command pending, please wait for it to be processed before sending another one.")
+return
+}
+
+StatusDiv.text('Setting APN...')
+show_loading('Setting APN...')
+
+cmd = 'set_apn'
+apn = document.getElementById('apn').value
+args  = {}
+
+return
+
+};
+
+
+
+
+
+//-----------------------------------
+// Refresh data (main loop)
+//-----------------------------------
+function main_loop() {
+    
+    
+	if ( ! processing) {
+	
+        // If not connected, tryto connect:
+        if (! connected) {
+            cmd  = 'check'
+            args = {}
+            call_api()  
+        }
+        
+        else {
+    
+            /*if (cmd != 'check' && ! processing){
+                call_api()  
+            }
+            else {*/
+            
+            	
+            call_api()
+            
+    
+            
+            
+        }
+
+	}
+    
+    setTimeout(main_loop, 4*1000);
+}
+
+main_loop();
+
+</script>
+
+
+
+
+
+
+
+
+

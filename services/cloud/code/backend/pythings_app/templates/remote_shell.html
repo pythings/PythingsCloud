@@ -1,0 +1,137 @@
+{% load static %} 
+{% include "header.html" %}
+{% include "navigation.html" %}
+                
+                <!-- Title area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body pathbar">
+                                <a href="/dashboard/">Dashboard</a> <font style="font-size:0.8em">&gt; Thing <a href="/dashboard_thing/?tid={{data.thing.tid}}&orpool={{ data.orpool }}&intaid={{data.thing.app.id}}" style="font-size:1.0em"><b>{{data.thing.name_short}}</b></a> &gt; Remote Shell</font>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Title area end -->
+
+                <!-- Remote shell area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body">
+                           
+                                <!-- The 26 empty lines are intentionally below to push down commands -->      
+                                <pre id="output" style="width: 100%; height: 500px; background-color:black; color:white; white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: white-space: -o-pre-wrap; word-wrap: break-word; margin:0px; padding:5px; padding-left:8px; padding-bottom:0px; border:none">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% for message in data.messages %}>>> {{message.data}} <font style="font-size:0.9em; font-weight:100; color:#A9A9A9">@{{message.ts}} ({{message.status}})</font>
+{% if message.reply %}{{message.reply_clean}}
+{% endif %}{% endfor %}</pre>
+
+                                <form action="/remote_shell/" method="GET" style='background-color:black; color:#ffffff; font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; font-size:13px; padding-bottom:5px'>
+                                <!-- {% csrf_token %}  -->
+                                <input type="hidden" name="orpool" value="{{data.orpool}}">
+                                <input type='hidden' name='tid' value='{{data.thing.tid}}' />
+                                <input type='hidden' name='intaid' value='{{data.thing.app.id}}' />
+                                <input type='hidden' name='generated_uuid' value='{{data.generated_uuid}}' />
+                                <input type='hidden' name='type' value='management' />
+                                <table style="width:100%"><tr><td style="width:40px">
+                                &nbsp;>>></td>
+                                <td><input id='cmd' type='text' name='new_msg' value='' style="background:black; border:none; color:#ffffff; width:100%; font-size:13px;" autofocus onkeydown="handleHistory(event)" />
+                                </td>
+                                <td style="width:40px">
+                                <input type="submit" value="Go">
+                                </td>
+                                </table>
+                                </form>
+ 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Remote shell area end -->                 
+                
+{% include "components/timezone_note.html" %}
+{% include "footer.html" %}
+
+
+<script language="javascript">
+
+jQuery( function(){
+	   var pre = jQuery("#output");
+	    pre.scrollTop( pre.prop("scrollHeight") );
+	});
+
+
+var cmd_history = []
+{% for message in data.messages %} 
+cmd_history.push("{{message.msg}}")
+{% endfor %}
+console.log(cmd_history)
+var slider = cmd_history.length
+
+
+function handleHistory(event) {
+
+	cmd_input = document.getElementById('cmd') 
+	
+    if(event.key == "ArrowUp") {
+        if (slider > 0) {
+            slider -= 1
+        }
+        cmd_input.value=(cmd_history[slider])
+        
+    }
+    if(event.key == "ArrowDown") {
+        if (slider < cmd_history.length-1) {
+            slider += 1
+        }
+        cmd_input.value=(cmd_history[slider])
+    }	
+
+} 
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

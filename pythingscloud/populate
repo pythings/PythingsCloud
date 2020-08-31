@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Check if we are in the right place
+if [ ! -d ./services ]; then
+    echo "You must run this command from the project's root folder."
+    exit 1
+fi
+
+pythingscloud/shell cloud "source /env.sh && source /db_conf.sh && cd /opt/code && BACKEND_LOG_LEVEL=ERROR fab populate"

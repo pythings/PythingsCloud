@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Check we are in the right place
+if [ ! -d ./services ]; then
+    echo "You must run this script from the project's root folder."
+    exit 1
+fi
+
+# Check that we have a running instance where to run tests
+PYTHINGSCLOUD_PS_GREP_INSTANCE=$(pythingscloud/ps | grep cloud)
+if [[ "x$PYTHINGSCLOUD_PS_GREP_INSTANCE" == "x" ]] ; then
+    echo ""
+    echo "Error: cloud service is not running, cannot run tests."
+    echo ""
+    exit 1
+fi
+
+# Set custom log Levels
+export DJANGO_LOG_LEVEL=CRITICAL
+export BACKEND_LOG_LEVEL=ERROR
+
+# Run tests
+pythingscloud/shell cloud "source /db_conf.sh && DJANGO_LOG_LEVEL=$DJANGO_LOG_LEVEL BACKEND_LOG_LEVEL=$BACKEND_LOG_LEVEL && cd /opt/code/ && python3 manage.py test $@"
+TESTS_EXIT_CODE=$?
+
+if [[ "x$TESTS_EXIT_CODE" == "x0" ]] ; then
+    echo "Tests passed, cleaning and giving green light (exit code 0)"
+    exit 0
+else
+    echo "Tests *not* passed, cleaning and giving red light (exit code $TESTS_EXIT_CODE)"
+    exit $TESTS_EXIT_CODE 
+fi
+
