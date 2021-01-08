@@ -34,8 +34,12 @@
                                 
                                 {% else %}
                                 
+                                {% if data.require_invitation %}
                                 <p><b>Welcome!</b> We are now in closed beta testing, so we can only accept invitation-based new users.</p>
                                 <p style="margin-top:5px">If you have an invitation code with you, you can create a new account straight away by filling the form below, otherwise please get in touch with us at <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a> to request one!</p>
+                                {% else %}
+                                <p><b>Welcome!</b> We are now in beta testing, so please remember that you use Pythings at your own risk. In case of bugs and questions please get in touch with us at <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a>!</p>                                
+                                {% endif %}
                                 
                                 <br/>
                                 
@@ -53,7 +57,11 @@
                                   {% csrf_token %}
                                   <input style="max-width:300px; margin: 5px auto" type="email" class="form-control" placeholder="Email" name='email' required autofocus>
                                   <input style="max-width:300px; margin: 5px auto" type="password" class="form-control" placeholder="Password" name='password' required>
+                                  
+                                  {% if data.require_invitation %}
                                   <input style="max-width:300px; margin: 5px auto" type="text" class="form-control" placeholder="Invitation code" name='invitation' required autofocus>
+                                  {% endif %}
+                                  
                                   <p style="font-size:1.0em">
 
                                   Send me updates as new releases and tutorials&nbsp;

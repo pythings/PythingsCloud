@@ -274,6 +274,10 @@ def register_view_template(request, redirect, invitation_code=None, callback=Non
     data={}
     data['user']   = request.user
     data['status'] = None
+    if invitation_code:
+        data['require_invitation'] = True
+    else:
+        data['require_invitation'] = False
 
     # Get data
     email      = request.POST.get('email', None)

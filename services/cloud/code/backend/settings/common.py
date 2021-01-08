@@ -130,7 +130,7 @@ WEBSETUP_DOMAIN_NAME = os.environ.get('WEBSETUP_DOMAIN_NAME', 'http://localhost'
 FAVICONS_PATH =  os.environ.get('FAVICONS_PATH', None)
 LOGO_FILE =  os.environ.get('LOGO_FILE', None)
 CONTACT_EMAIL=os.environ.get('CONTACT_EMAIL', 'contact@pythings.local')
-INVITATION_CODE=os.environ.get('INVITATION_CODE', 'tryme')
+INVITATION_CODE=os.environ.get('INVITATION_CODE', None)
 
 BACKEND_EMAIL_SERVICE = os.environ.get('BACKEND_EMAIL_SERVICE', 'Sendgrid')
 if not BACKEND_EMAIL_SERVICE in ['Sendgrid', None]:
