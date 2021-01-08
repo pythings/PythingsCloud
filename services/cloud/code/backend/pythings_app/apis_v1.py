@@ -394,11 +394,9 @@ class api_msg_drop(publicAPI):
         # Check data consumption
         total_messages, _, _, = get_total_messages(thing.app.user)
         
-        
-        # Limits are DISABLED for now
-        #if total_messages >= thing.app.user.profile.plan_messages_limit:
-        #    logger.info('LIMIT: reached messages limit for the account "{}" ({})'.format(thing.app.user.email, thing.app.user.username))
-        #    return error401(caller=self, error_msg='Reached messages limit for the account! Please upgrade.')
+        if total_messages >= thing.app.user.profile.plan_messages_limit:
+            logger.info('LIMIT: reached messages limit for the account "{}" ({})'.format(thing.app.user.email, thing.app.user.username))
+            return error401(caller=self, error_msg='Sorry, but you reached the messages limit for your account!')
      
         def decode_base64(data):
             """Decode base64, padding being optional.
@@ -415,8 +413,8 @@ class api_msg_drop(publicAPI):
         
         # Check message size
         msg_len = len(json.dumps(msg))
-        if msg_len > 1024:
-            return error400(caller=self, error_msg='Hi, Pythings Cloud here. Error: message too long ({} chars, maximum is 1024)'.format(msg_len))
+        if msg_len > 512:
+            return error400(caller=self, error_msg='Hi, Pythings Cloud here. Error: message too long ({} chars, maximum is 512)'.format(msg_len))
 
         # Store message
         logger.info('Storing message with aid="{}", tid="{}", ts="{}", msg="{}...")'. format(thing.app.aid, thing.tid, ts, str(msg)[0:50]))
@@ -904,7 +902,7 @@ class api_things_register(publicAPI):
                 total_devices = get_total_devices(app.user)
                 if total_devices >= app.user.profile.plan_things_limit:
                     logger.info('LIMIT: reached devices limit for the account "{}" ({})'.format(app.user.email, app.user.username))
-                    return error401(caller=self, error_msg='Hi, Pythings Cloud here. Sorry, but you reached the device limit for your account! Please upgrade.')
+                    return error401(caller=self, error_msg='Hi, Pythings Cloud here. Sorry, but you reached the device limit for your account!')
                     
                 # If we have the pool name, set it while checking if it exists, if not default
                 #  on App's default pool, and otherwise use the App's default pool as weel.
@@ -960,7 +958,7 @@ class api_things_register(publicAPI):
                 total_devices = get_total_devices(user)
                 if total_devices >= user.profile.plan_things_limit:
                     logger.info('LIMIT: reached devices limit for the account "{}" ({})'.format(user.email, user.username))
-                    return error401(caller=self, error_msg='Hi, Pythings Cloud here. Sorry, but you reached the device limit for your account! Please upgrade.')
+                    return error401(caller=self, error_msg='Hi, Pythings Cloud here. Sorry, but you reached the device limit for your account!')
 
                 # Always use default pool in this case (that will be the "ubound" pool)
                 pool = app.default_pool

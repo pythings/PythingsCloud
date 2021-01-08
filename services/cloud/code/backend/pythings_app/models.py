@@ -313,8 +313,8 @@ class Profile(models.Model):
     timezone = models.CharField('User Timezone', max_length=36, default='UTC')
     apikey = models.CharField('User API key', max_length=36, blank=True, null=True)
     plan = models.CharField('User plan', max_length=36, blank=False, null=False, default='Betatester')
-    plan_messages_limit = models.IntegerField('plan_messages_limit', default=1000000)
-    plan_things_limit  = models.IntegerField('plan_things_limit', default=10)
+    plan_messages_limit = models.IntegerField('plan_messages_limit', default=100000)
+    plan_things_limit  = models.IntegerField('plan_things_limit', default=5)
     type    = models.CharField('Profile type', max_length=36, blank=False, null=False, default='Standard') # Advanced | Developer | Hacker ...
     type_id = models.IntegerField('Profile Type ID', default=10)
     email_updates = models.BooleanField(default=False)
