@@ -4,48 +4,32 @@ import uuid
 import time
 import pytz
 import datetime
-import netifaces
 
 # Django imports
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
-from rest_framework.authentication import SessionAuthentication
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 # Backend imports
-from backend.common.utils import send_email, booleanize
-from backend.common.views import private_view, public_view
-from backend.common.views import login_view_template, logout_view_template, register_view_template
-from backend.common.exceptions import ErrorMessage
-from .models import App, Thing, Session, Profile, WorkerMessageHandler, Commit, MessageCounter, ManagementMessage, WorkerMessage, Pool, File, Commit
-from .common import get_total_messages, get_total_devices, os_shell, dt_from_str, timezonize, format_exception
-from .common import os_shell, timezonize, s_from_dt, get_timezone, dt, dt_from_s
-from .common import OS_VERSIONS
-from .common import create_app as common_create_app
-from .common import create_none_app
+from ..common.decorators import private_view, public_view
+from ..common.utils import booleanize, format_exception, send_email, random_username
+from ..common.exceptions import ErrorMessage
+from ..common.time import timezonize, s_from_dt, dt, dt_from_s
+from ..base_app.models import LoginToken
+from .models import App, Thing, Session, Profile, WorkerMessageHandler, MessageCounter, ManagementMessage, WorkerMessage, Pool, File, Commit
+from .helpers import create_app as create_app_helper
+from .helpers import create_none_app, get_total_messages, get_total_devices, get_timezone_from_request
 
 # Setup logging
 logger = logging.getLogger(__name__)
 
-# Default timeout
-TIMEOUT_TOLERANCE = 60
 
-# Colormap (See https://bhaskarvk.github.io/colormap/reference/colormap.html)
-colormap = ["#440154", "#440558", "#450a5c", "#450e60", "#451465", "#461969",
-            "#461d6d", "#462372", "#472775", "#472c7a", "#46307c", "#45337d",
-            "#433880", "#423c81", "#404184", "#3f4686", "#3d4a88", "#3c4f8a",
-            "#3b518b", "#39558b", "#37598c", "#365c8c", "#34608c", "#33638d",
-            "#31678d", "#2f6b8d", "#2d6e8e", "#2c718e", "#2b748e", "#29788e",
-            "#287c8e", "#277f8e", "#25848d", "#24878d", "#238b8d", "#218f8d",
-            "#21918d", "#22958b", "#23988a", "#239b89", "#249f87", "#25a186",
-            "#25a584", "#26a883", "#27ab82", "#29ae80", "#2eb17d", "#35b479",
-            "#3cb875", "#42bb72", "#49be6e", "#4ec16b", "#55c467", "#5cc863",
-            "#61c960", "#6bcc5a", "#72ce55", "#7cd04f", "#85d349", "#8dd544",
-            "#97d73e", "#9ed93a", "#a8db34", "#b0dd31", "#b8de30", "#c3df2e",
-            "#cbe02d", "#d6e22b", "#e1e329", "#eae428", "#f5e626", "#fde725"]
+# This is a support var used to prevent double click problems
+ONGOING_SIGNUPS = {}
 
 #==========================
 #  Web Setup view
@@ -81,8 +65,103 @@ def new_thing(request):
 #=========================
 
 @public_view
-def user_login(request, template='login.html'):
-    return login_view_template(request, redirect='/postlogin')
+def user_login(request):
+  
+    redirect= '/postlogin'
+    data = {}
+
+    # If authenticated user reloads the main URL
+    if request.method == 'GET' and request.user.is_authenticated():
+        return HttpResponseRedirect(redirect)
+    
+    # If unauthenticated user tries to log in
+    if request.method == 'POST':
+        if not request.user.is_authenticated():
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            # Use Django's machinery to attempt to see if the username/password
+            # combination is valid - a User object is returned if it is.
+            
+            if "@" in username:
+                # Get the username from the email
+                try:
+                    user = User.objects.get(email=username)
+                    username = user.username
+                except User.DoesNotExist:
+                    if password:
+                        raise ErrorMessage('Check email and password')
+                    else:
+                        # Return here, we don't want to give any hints about existing users
+                        data['success'] = 'Ok, you will shortly receive a login link by email (if we have your data).'
+                        return render(request, 'login.html', {'data': data})
+            
+            if password:
+                user = authenticate(username=username, password=password)
+                if user:
+                    login(request, user)
+                    return HttpResponseRedirect(redirect)
+                else:
+                    raise ErrorMessage('Check email and password')
+            else:
+                
+                # If empty password, send mail with login token
+                token = uuid.uuid4()
+                logger.debug('Sending login token "{}" via mail to {}'.format(token, user.email))
+                
+                # Create token or update if existent (and never used)
+                try:
+                    loginToken = LoginToken.objects.get(user=user)
+                except LoginToken.DoesNotExist:     
+                    LoginToken.objects.create(user=user, token=token)
+                else:
+                    loginToken.token = token
+                    loginToken.save()
+                
+                send_email(to=user.email, subject='Pythings Cloud login link', text='Hello,\n\nhere is your login link: {}/login/?token={}\n\nOnce logged in, you can go to "My Account" and change password (or just keep using the login link feature).'.format(settings.MAIN_DOMAIN_NAME, token))
+               
+                # Return here, we don't want to give any hints about existing users
+                data['success'] = 'Ok, you will shortly receive a login link by email (if we have your data).'
+                return render(request, 'login.html', {'data': data})
+                    
+                
+        else:
+            # This should never happen.
+            # User tried to log-in while already logged in: log him out and then render the login
+            logout(request)        
+              
+    else:
+        # If we are logging in through a token
+        token = request.GET.get('token', None)
+
+        if token:
+            
+            loginTokens = LoginToken.objects.filter(token=token)
+            
+            if not loginTokens:
+                raise ErrorMessage('Token not valid or expired')
+    
+            
+            if len(loginTokens) > 1:
+                raise Exception('Consistency error: more than one user with the same login token ({})'.format(len(loginTokens)))
+            
+            # Use the first and only token (todo: use the objects.get and correctly handle its exceptions)
+            loginToken = loginTokens[0]
+            
+            # Get the user from the table
+            user = loginToken.user
+            
+            # Set auth backend
+            user.backend = 'django.contrib.auth.backends.ModelBackend'
+    
+            # Ok, log in the user
+            login(request, user)
+            loginToken.delete()
+            
+            # Now redirect to site
+            return HttpResponseRedirect(redirect)
+                
+    # All other cases, render the login page
+    return render(request, 'login.html', {'data': data})
 
 
 #=========================
@@ -111,8 +190,9 @@ def postlogin(request):
 #=========================
 
 @private_view
-def user_logout(request):
-    return logout_view_template(request, redirect='/')
+def user_logout(request): 
+    logout(request)
+    return HttpResponseRedirect('/')
 
 
 #=========================
@@ -120,35 +200,116 @@ def user_logout(request):
 #=========================
 
 @public_view
-def register(request, template='register.html'):
+def register(request):
 
-    # Define the callback that we will use on success to create the profile, as callable object
-    class CreateProfile(object):
-        
-        def __init__(self, email_updates):
-            self.email_updates=email_updates
-    
-        def __call__(self, user):
+    # user var
+    user = None
 
-            # Create profile
-            logger.debug('Creating user profile for user "{}" with email_updates="{}"'.format(user.email, self.email_updates))
-            Profile.objects.create(user=request.user, last_accepted_terms=settings.TERMS_VERSION, email_updates=email_updates)
+    # Init data
+    data={}
+    data['user']   = request.user
+    data['status'] = None
+    if settings.INVITATION_CODE:
+        data['require_invitation'] = True
+    else:
+        data['require_invitation'] = False
+
+    # Get data
+    email      = request.POST.get('email', None)
+    password   = request.POST.get('password', None)
+    invitation = request.POST.get('invitation', None) # Verification code set for anyone
+
+    if request.user.is_authenticated():
+        return(HttpResponseRedirect('/dashboard'))
+
+    else:
+
+        if email and password:
             
-            # Create Messages counter
-            logger.debug('Creating messages counter for user "{}" '.format(user.email))
-            MessageCounter.objects.create(user = user)
+            # Check both email and password are set
+            if not email:
+                raise ErrorMessage('Missing email')
+         
+            if not password:
+                raise ErrorMessage('Missing password')
+         
+            # Check if we have to validate an invitation code
+            if settings.INVITATION_CODE:
+                if invitation != settings.INVITATION_CODE:
+                    raise ErrorMessage('The invitation code you entered is not valid.')
+            
+            if not email in ONGOING_SIGNUPS:
+                
+                # Add user to recent signups dict
+                ONGOING_SIGNUPS[email] = None
+                
+                # Check if user with this email already exists
+                if len(User.objects.filter(email = email)) > 0:
+                    del ONGOING_SIGNUPS[email]
+                    raise ErrorMessage('The email address you entered is already registered.')
+  
+                # Register the user
+                user = User.objects.create_user(random_username(), password=password, email=email)
 
-            # Also create the None App
-            logger.debug('Creating None App for user "{}" '.format(user.email))
-            create_none_app(request.user)
+                # Is this necessary?
+                user.save()
+                
+                # Manually set the auth backend for the user
+                user.backend = 'django.contrib.auth.backends.ModelBackend'
+                login(request, user)
+                
+                data['status'] = 'activated'
+                data['user'] = user
 
-    # Get email updates preference
-    email_updates = booleanize(request.POST.get('email_updates', False))
-    
-    # Create callable object
-    create_profile = CreateProfile(email_updates=email_updates)
+                # Get email updates preference
+                email_updates = booleanize(request.POST.get('email_updates', False))
+                
+                # Create the user Profile
+                logger.debug('Creating user profile for user "{}" with email_updates="{}"'.format(user.email, email_updates))
+                Profile.objects.create(user=request.user, last_accepted_terms=settings.TERMS_VERSION, email_updates=email_updates)
+                
+                # Create Messages counter
+                logger.debug('Creating messages counter for user "{}" '.format(user.email))
+                MessageCounter.objects.create(user = user)
+            
+                # Also create the None App for the user
+                logger.debug('Creating None App for user "{}" '.format(user.email))
+                create_none_app(request.user)
+                
+                # Remove user from recent signups
+                del ONGOING_SIGNUPS[email]
+                
+                return render(request, 'register.html', {'data': data})
+            
+            else:
 
-    return register_view_template(request, invitation_code=settings.INVITATION_CODE, redirect='/dashboard', callback=create_profile)
+                # Check previous requesta ctivated the user
+                i=0
+                while True:
+                    if email not in ONGOING_SIGNUPS:
+                        break
+                    else:
+                        time.sleep(1)
+                        i+=1
+                    if i>30:
+                        raise ErrorMessage('Timed up. Your user might have been correctly created anyway. Please try to login if it does not work to signup again, if the error persists contact us')
+
+                users_with_this_email = User.objects.filter(email = email)
+                if users_with_this_email<1:
+                    raise ErrorMessage('Error in creating the user. Please try again and if the error persists contact us')
+                else:
+                    data['status'] = 'activated'
+                    data['user'] = users_with_this_email[0]
+                    user = authenticate(username=users_with_this_email[0].username, password=password)
+                    if not user:
+                        raise ErrorMessage('Error. Please try again and if the error persists contact us')
+                    login(request, user)
+                    return render(request, 'register.html', {'data': data})
+
+        else:
+            return render(request, 'register.html', {'data': data})
+
+    return render(request, 'register.html', {'data': data})
 
 
 #==========================
@@ -300,7 +461,7 @@ def dashboard(request):
     
     # Get last edit time
     for app in apps:
-        app.latest_commit_ts = str(Commit.objects.filter(app=app).latest('ts').ts.astimezone(timezonize(get_timezone(request)))).split('.')[0]
+        app.latest_commit_ts = str(Commit.objects.filter(app=app).latest('ts').ts.astimezone(timezonize(get_timezone_from_request(request)))).split('.')[0]
 
     # Enumerate things for this user Apps
     data['lastsessions'] = []
@@ -317,13 +478,13 @@ def dashboard(request):
             session.connection_status = '<font color="red">OFFLINE</font>'
             session.thing_status = 'OFFLINE'
             try:
-                if deltatime_from_last_contact_s < int(thing.pool.settings.management_interval) + TIMEOUT_TOLERANCE:
+                if deltatime_from_last_contact_s < int(thing.pool.settings.management_interval) + settings.CONTACT_TIMEOUT_TOLERANCE:
                     session.connection_status = '<font color="limegreen">ONLINE</font>'
                     session.thing_status = 'ONLINE'
             except:
                 pass
             try:
-                if deltatime_from_last_contact_s < int(thing.pool.settings.worker_interval) + TIMEOUT_TOLERANCE:
+                if deltatime_from_last_contact_s < int(thing.pool.settings.worker_interval) + settings.CONTACT_TIMEOUT_TOLERANCE:
                     session.connection_status = '<font color="limegreen">ONLINE</font>'
                     session.thing_status = 'ONLINE'
             except:
@@ -333,7 +494,7 @@ def dashboard(request):
             session.app_name = thing.app.name
             
             # Improve displaying time
-            session.last_contact = str(session.last_contact.astimezone(timezonize(get_timezone(request)))).split('.')[0]
+            session.last_contact = str(session.last_contact.astimezone(timezonize(get_timezone_from_request(request)))).split('.')[0]
             
             global_status = '<font color="limegreen">OK</font>'
             for _ in [1]:
@@ -378,25 +539,6 @@ def dashboard(request):
 
     # Render
     return render(request, 'dashboard.html', {'data': data})
-
-
-#===========================
-#  Apps Dashboard view
-#===========================
-
-@private_view
-def dashboard_apps(request):
-
-    # Init data
-    data={}
-    data['user']  = request.user
-    data['apps']  = []
-
-    # Enumerate Apps
-    for app in App.objects.filter(user=request.user):
-        data['apps'].append(app)
-
-    return render(request, 'dashboard_apps.html', {'data': data})
 
 
 #===========================
@@ -454,23 +596,23 @@ def dashboard_app(request):
             ManagementMessage.objects.filter(aid=thing.app.aid, tid=thing.tid).delete()
     
         # 2) Save Settings which are indirectly attached to the App's pools
-        settings_to_delete=[]
+        setting_objects_to_delete=[]
         for pool in Pool.objects.filter(app=app):
             logger.info('Removing pool settings for pool "{}" '.format(pool.name))
-            settings_to_delete.append(pool.settings)
+            setting_objects_to_delete.append(pool.settings)
     
         # 3) Delete the App, this will trigger a "delete cascade" basically.
         app.delete()
         
         # 4) Remove settings leftover
-        for settings in settings_to_delete:
-            settings.delete()
+        for setting_object_to_delete in setting_objects_to_delete:
+            setting_object_to_delete.delete()
         
         # Render OK-deleted page
         return render(request, 'dashboard_app_deleted.html', {'data': data})
 
     # Set PythingsOS versions
-    data['pythings_versions'] = OS_VERSIONS
+    data['pythings_versions'] = settings.OS_VERSIONS
     
     # If a pool is set, get it, otherwise use the default pool:
     if pool_name:
@@ -602,7 +744,7 @@ def dashboard_app(request):
      
     # Get latest version
     data['app_latest_commit'] = Commit.objects.filter(app=app).latest('ts')
-    data['app_latest_commit_ts'] = str(data['app_latest_commit'].ts.astimezone(timezonize(get_timezone(request)))).split('.')[0]
+    data['app_latest_commit_ts'] = str(data['app_latest_commit'].ts.astimezone(timezonize(get_timezone_from_request(request)))).split('.')[0]
    
     # Enumerate things for this App and pool
     for thing in Thing.objects.filter(app=app, pool=selected_pool):
@@ -618,20 +760,20 @@ def dashboard_app(request):
             session.connection_status = '<font color="red">OFFLINE</font>'
             session.thing_status = 'OFFLINE'
             try:
-                if deltatime_from_last_contact_s < int(selected_pool.settings.management_interval) + TIMEOUT_TOLERANCE:
+                if deltatime_from_last_contact_s < int(selected_pool.settings.management_interval) + settings.CONTACT_TIMEOUT_TOLERANCE:
                     session.connection_status = '<font color="limegreen">ONLINE</font>'
                     session.thing_status = 'ONLINE'
             except:
                 pass
             try:
-                if deltatime_from_last_contact_s < int(selected_pool.settings.worker_interval) + TIMEOUT_TOLERANCE:
+                if deltatime_from_last_contact_s < int(selected_pool.settings.worker_interval) + settings.CONTACT_TIMEOUT_TOLERANCE:
                     session.connection_status = '<font color="limegreen">ONLINE</font>'
                     session.thing_status = 'ONLINE'
             except:
                 pass
 
             # Improve displaying time
-            session.last_contact = str(session.last_contact.astimezone(timezonize(get_timezone(request)))).split('.')[0]
+            session.last_contact = str(session.last_contact.astimezone(timezonize(get_timezone_from_request(request)))).split('.')[0]
             
             global_status = '<font color="limegreen">OK</font>'
             for _ in [1]:
@@ -680,106 +822,6 @@ def dashboard_app(request):
     return render(request, 'dashboard_app.html', {'data': data})
 
 
-#===========================
-#  Things Dashboard view
-#===========================
-
-@private_view
-def dashboard_things(request):
-
-    # Init data
-    data={}
-    data['user']  = request.user
-    data['profile'] = Profile.objects.get(user=request.user)
-    data['lastsessions'] = []
-    data['pool'] = None
-    data['orpool'] = request.GET.get('orpool',None)
-    data['action'] = request.GET.get('action', None)    
-      
-    # Get all apps for this user
-    apps = App.objects.filter(user=request.user)
-    
-    # Enumerate pythings versions
-    data['pythings_versions'] = OS_VERSIONS
-
-    # Enumerate things for this application and pool
-    for thing in Thing.objects.filter(app_id__in=[app.id for app in apps]):
-    
-        try:
-            session = Session.objects.filter(thing=thing).latest('last_contact')
-        except:
-            pass
-        else:
-    
-            # Get delta between now and last contact
-            deltatime_from_last_contact_s = time.time() - s_from_dt(session.last_contact) #session.last_contact 
-            session.connection_status = '<font color="red">OFFLINE</font>'
-            session.thing_status = 'OFFLINE'
-            try:
-                if deltatime_from_last_contact_s < int(thing.pool.settings.management_interval) + TIMEOUT_TOLERANCE:
-                    session.connection_status = '<font color="limegreen">ONLINE</font>'
-                    session.thing_status = 'ONLINE'
-            except:
-                pass
-            try:
-                if deltatime_from_last_contact_s < int(thing.pool.settings.worker_interval) + TIMEOUT_TOLERANCE:
-                    session.connection_status = '<font color="limegreen">ONLINE</font>'
-                    session.thing_status = 'ONLINE'
-            except:
-                pass
-            
-            # Attach App name
-            session.app_name = thing.app.name
-            
-            # Imporve displaying time
-            session.last_contact = str(session.last_contact.astimezone(timezonize(get_timezone(request)))).split('.')[0]
-            
-            global_status = '<font color="limegreen">OK</font>'
-            for _ in [1]:
-           
-                if session.last_pythings_status[0:2].upper() != 'OK':
-                    global_status = '<font color="red">KO</font>'
-                    break
-                
-                if session.last_worker_status[0:2].upper() == 'KO':
-                    global_status = '<font color="red">KO</font>'
-                    break
-                
-                if session.last_management_status[0:2].upper() == 'KO':
-                    global_status = '<font color="red">KO</font>'
-                    break
-    
-                if session.last_worker_status[0:2].upper() == 'UN':
-                    global_status = '<font color="orange">~OK</font>'
-                    break   
-                
-                if session.last_management_status[0:2].upper() == 'UN':
-                    global_status = '<font color="orange">~OK</font>'
-                    break
-                             
-            session.global_status = global_status
-            
-
-            # Get latest commit (to get if we have an AI or not)
-            session.app_latest_commit = Commit.objects.filter(app=thing.app).latest('ts')
-    
-            # Append session to last sessions 
-            data['lastsessions'].append(session)
-
-            # Get last worker message
-            try: 
-                last_worker_msgs = WorkerMessageHandler.get(aid=thing.app.aid, tid=thing.tid, last=1)
-                for item in last_worker_msgs:
-                    session.last_worker_msg = item
-                    break
-            except Exception as e:
-                logger.error(e)
-                session.last_worker_msg = None    
-    
-    # Render
-    return render(request, 'dashboard_things.html', {'data': data})
-
-
 #==================================
 #  Thing Dashboard view
 #==================================
@@ -787,7 +829,7 @@ def dashboard_things(request):
 @private_view
 def dashboard_thing(request):
 
-    profile_timezone = timezonize(get_timezone(request))
+    profile_timezone = timezonize(get_timezone_from_request(request))
     
     # Init data
     data={}
@@ -977,6 +1019,9 @@ def dashboard_thing(request):
     try:
         session = Session.objects.filter(thing=thing).latest('last_contact')
         data['session'] = session
+        session.duration = str(session.last_contact-session.started).split('.')[0]
+        if session.duration.startswith('0'):
+            session.duration = '0'+session.duration
     except:
         data['session'] = None 
     else:
@@ -986,14 +1031,14 @@ def dashboard_thing(request):
         data['connection_status'] = '<font color="red">OFFLINE</font>'
         data['thing_status'] = 'OFFLINE'
         try:
-            if deltatime_from_last_contact_s < int(thing.pool.settings.management_interval) + TIMEOUT_TOLERANCE:
+            if deltatime_from_last_contact_s < int(thing.pool.settings.management_interval) + settings.CONTACT_TIMEOUT_TOLERANCE:
                 data['connection_status'] = '<font color="limegreen">ONLINE</font>'
                 data['thing_status']  = 'ONLINE'
 
         except:
             pass
         try:
-            if deltatime_from_last_contact_s < int(thing.pool.settings.worker_interval) + TIMEOUT_TOLERANCE:
+            if deltatime_from_last_contact_s < int(thing.pool.settings.worker_interval) + settings.CONTACT_TIMEOUT_TOLERANCE:
                 data['connection_status'] = '<font color="limegreen">ONLINE</font>'
                 data['thing_status']  = 'ONLINE'
         except:
@@ -1167,6 +1212,7 @@ def dashboard_thing(request):
             metric_max = None
             start_time_dt = None
             end_time_dt   = None
+            
             # Loop and aggregate data
             for i, entry in enumerate(data['timeseries'][key]):
                 
@@ -1258,7 +1304,7 @@ def dashboard_thing(request):
 #===========================
 
 @private_view
-def dashboard_sessions(request):
+def dashboard_thing_sessions(request):
 
     # Init data
     data={}
@@ -1312,8 +1358,8 @@ def dashboard_sessions(request):
             count += 1
             session.count = count
             session.duration = session.last_contact-session.started
-            session.started = str(session.started.astimezone(timezonize(get_timezone(request)))).split('.')[0]
-            session.last_contact = str(session.last_contact.astimezone(timezonize(get_timezone(request)))).split('.')[0]
+            session.started = str(session.started.astimezone(timezonize(get_timezone_from_request(request)))).split('.')[0]
+            session.last_contact = str(session.last_contact.astimezone(timezonize(get_timezone_from_request(request)))).split('.')[0]
                 
             # Format worker traceback if any
             session.last_worker_status_traceback = None
@@ -1342,7 +1388,7 @@ def dashboard_sessions(request):
         data['sessions'] = None
 
     # Ok, render       
-    return render(request, 'dashboard_sessions.html', {'data': data})
+    return render(request, 'dashboard_thing_sessions.html', {'data': data})
 
 
 #===========================
@@ -1350,7 +1396,7 @@ def dashboard_sessions(request):
 #===========================
 
 @private_view
-def dashboard_messages(request):
+def dashboard_thing_messages(request):
  
     # Init data
     data={}
@@ -1419,7 +1465,7 @@ def dashboard_messages(request):
             for msg in WorkerMessageHandler.get(aid=thing.app.aid, tid=thing.tid, last=100):
                 
                 # Fix time
-                msg.ts = str(msg.ts.astimezone(timezonize(get_timezone(request)))).split('.')[0]
+                msg.ts = str(msg.ts.astimezone(timezonize(get_timezone_from_request(request)))).split('.')[0]
                 
                 # Convert from json to string
                 msg.data = str(msg.data)
@@ -1450,7 +1496,7 @@ def dashboard_messages(request):
         # Load management messages
         try:
             for msg in ManagementMessage.objects.filter(tid=thing.tid, aid=thing.app.aid, type='APP').order_by('-ts')[start:end]:
-                msg.ts = str(msg.ts.astimezone(timezonize(get_timezone(request)))).split('.')[0]
+                msg.ts = str(msg.ts.astimezone(timezonize(get_timezone_from_request(request)))).split('.')[0]
                 data['messages'].append(msg)
         except:
             pass
@@ -1464,7 +1510,7 @@ def dashboard_messages(request):
     data['end']   = end if len(data['messages'])>=pagination else 0
     
     # Ok, render      
-    return render(request, 'dashboard_messages.html', {'data': data})
+    return render(request, 'dashboard_thing_messages.html', {'data': data})
 
 
 #===========================
@@ -1472,7 +1518,7 @@ def dashboard_messages(request):
 #===========================
 
 @private_view
-def remote_shell(request):
+def dashboard_thing_shell(request):
 
     # Init data
     data={}
@@ -1528,7 +1574,7 @@ def remote_shell(request):
  
     # Load CMD management messages (filter by Thing as they are linked to the thing and not a specific app)
     for msg in ManagementMessage.objects.filter(thing=thing, type='CMD').order_by('ts'):
-        msg.ts = str(msg.ts.astimezone(timezonize(get_timezone(request)))).split('.')[0]
+        msg.ts = str(msg.ts.astimezone(timezonize(get_timezone_from_request(request)))).split('.')[0]
         if msg.reply:
             msg.reply_clean = msg.reply.rstrip('\n')
             msg.reply_clean = msg.reply_clean.rstrip('\n\r')
@@ -1537,7 +1583,7 @@ def remote_shell(request):
         data['messages'].append(msg)
 
     # Ok, render       
-    return render(request, 'remote_shell.html', {'data': data})
+    return render(request, 'dashboard_thing_shell.html', {'data': data})
         
 
 #===========================
@@ -1554,7 +1600,7 @@ def new_app(request):
     data['app'] = None
     data['lastsessions'] = []
     data['pool'] = None
-    data['pythings_versions'] = OS_VERSIONS
+    data['pythings_versions'] = settings.OS_VERSIONS
              
     # Get name form GET request
     app_name = request.POST.get('app_name',None)
@@ -1568,7 +1614,7 @@ def new_app(request):
         use_latest_app_version = True
 
     if app_name:
-        common_create_app(name                = app_name,
+        create_app_helper(name                = app_name,
                           user                = request.user,
                           aid                 = None,
                           management_interval = management_interval,
@@ -1581,11 +1627,11 @@ def new_app(request):
 
 
 #===========================
-#  App editor view
+#  App code editor view
 #===========================
 
 @private_view
-def app_editor(request):
+def dashboard_app_code_editor(request):
 
     # Init data
     data={}
@@ -1766,17 +1812,15 @@ def app_editor(request):
 
     # Fix timestamp for file
     if 'file' in data and data['file']:
-        data['file'].ts= str(data['file'].ts.astimezone(timezonize(get_timezone(request)))).split('.')[0]
+        data['file'].ts= str(data['file'].ts.astimezone(timezonize(get_timezone_from_request(request)))).split('.')[0]
 
     # Render
-    return render(request, 'app_editor.html', {'data': data})
+    return render(request, 'dashboard_app_code_editor.html', {'data': data})
 
 
 #===========================
 #  Apps list view
 #===========================
-
-from django.views.decorators.clickjacking import xframe_options_exempt
 
 @private_view
 @xframe_options_exempt

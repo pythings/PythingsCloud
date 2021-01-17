@@ -26,7 +26,7 @@ Save = function(reload) {
     });  
     
     $.ajax({
-        url: "/api/web/v1/ide/uploadfile",
+        url: "/api/web/v1/code_editor/uploadfile",
         type: "POST",
         data: { name: "{{data.file.name}}", intaid:"{{data.app.id}}", version: null, content: editor.getValue()},
         dataType: "json",
@@ -89,7 +89,7 @@ Save = function(reload) {
         <!-- START commit browser (for small screens) -->
         <div class="showable">
           <center>
-            <form action="/app_editor" method="get">
+            <form action="/dashboard_app_code_editor" method="get">
             <b>Commit:</b> <input type="hidden" name="intaid" value="{{data.app.id}}">
             <select name="cid" onchange="this.form.submit()">
 
@@ -152,7 +152,7 @@ Save = function(reload) {
           {% if data.global_app_uncommitted_files|length != 0 %}
 
               Uncommitted changes
-              <form action="/app_editor" method="get">
+              <form action="/dashboard_app_code_editor" method="get">
               <input type="hidden" name="intaid" value="{{data.app.id}}">
               <input type="hidden" name="commit" value="True"> 
               <button class="simplebutton" type="button" onclick="this.form.submit()">Commit</button>
@@ -162,7 +162,7 @@ Save = function(reload) {
           
               Everything committed
 
-              <form action="/app_editor" method="get">
+              <form action="/dashboard_app_code_editor" method="get">
               <input type="hidden" name="intaid" value="{{data.app.id}}">
               <input type="hidden" name="cid" value="{{data.cid}}">
                 
@@ -208,7 +208,7 @@ Save = function(reload) {
           </td>
 
           <td valign="top" align="center" class="hideable">
-            <form action="/app_editor" method="get">
+            <form action="/dashboard_app_code_editor" method="get">
             <input type="hidden" name="intaid" value="{{data.app.id}}">
             <select name="cid" onchange="this.form.submit()">
 

@@ -26,7 +26,13 @@
                             <div class="card-body">
       
                                 <!-- Thing name -->
-                                <table class="dashboard_noborder">   
+                                <table class="dashboard_noborder">
+
+                                <tr><td><b>Thing ID:</b></td>
+                                <td>
+                                {{data.thing.tid}}
+                                </td></tr>                                
+                                
                                 <tr><td><b>Name:</b></td><td>
                                 {% if data.edit == 'name' %}
                                 <form action="" method="POST">
@@ -42,15 +48,15 @@
                                 {{data.thing.name_short}} | <a href="?tid={{data.thing.tid}}&edit=name&intaid={{data.thing.app.id}}">Edit</a>
                                 {% endif %}
                                 </td></tr>
-                                
-                                <!-- Thing ID -->
-                                <tr><td><b>TID:</b></td>
-                                <td>
-                                {{data.thing.tid}}
-                                </td></tr>
 
-                                <!-- Thing type -->
-                                <tr><td><b>Type:</b></td>
+                                <!-- Thing OS -->
+                                <tr><td><b>OS:</b></td>
+                                <td> 
+                                {{data.session.pythings_version}}
+                                </td></tr>      
+                                
+                                <!-- Thing platform -->
+                                <tr><td><b>Platform:</b></td>
                                 <td> 
                                 {% if data.simulator %}
                                 {{ data.thing.platform }} Simulator
@@ -63,12 +69,7 @@
                                 {% endif %}
                                 </td></tr>                                 
 
-                                <!-- Thing OS -->
-                                <tr><td><b>OS:</b></td>
-                                <td> 
-                                PythingsOS {{data.session.pythings_version}}
-                                </td></tr>                                
-
+                         
                                 <!-- Thing App -->
                                 <tr><td><b>App:</b></td><td>
                                 {% if data.thing.app.hidden %}
@@ -79,8 +80,12 @@
                                 </td></tr>
 
                                 <!-- Thing status -->
-                                <tr><td><b>Status:&nbsp;</b></td><td>{{data.connection_status | safe }} 
-                                <!--  {% if data.simulator.status %}<font size=-1>(Simulator {{data.simulator.status}})</font> {% endif %} -->
+                                <tr><td><b>Status:&nbsp;</b></td><td>{{data.connection_status | safe }}
+                                {% if data.thing_status == 'OFFLINE' %}
+                                <font size="-1"><i> (since {{data.session.last_contact}})</i></font>
+                                {% else %}
+                                <font size="-1"><i> ({{data.session.duration}}) </i></font>                                
+                                {% endif %}
                                 </td></tr> 
                                 
                                 <!-- Thing Pool -->
@@ -123,7 +128,7 @@
 
                                 <!--  Pythings OS status  -->
                                 <div style="margin-top:2px">
-                                &nbsp; &nbsp;PythingsOS:
+                                &nbsp; &nbsp;OS:
                                 {% if data.thing_status == 'ONLINE' %}
                                 {% if data.session.last_pythings_status.1 == 'K' %}
                                     <font color="limegreen">{{data.session.last_pythings_status}}</font>
@@ -133,7 +138,7 @@
                                 {% else %}
                                 N.A.
                                 {% endif %}                                
-                                | <a href="/dashboard_sessions?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}">sessions</a>
+                                | <a href="/dashboard_thing_sessions?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}">sessions</a>
                                 </div>
                                      
                                 <!--  Worker Status  -->
@@ -152,7 +157,7 @@
                                 {% else %}
                                 N.A.
                                 {% endif %}
-                                | <a href="/dashboard_messages?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&type=worker&start=0">messages</a>
+                                | <a href="/dashboard_thing_messages?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&type=worker&start=0">messages</a>
                                 <div id="divWorkerTB" style="display: none; background:#f0f0f0; margin:0px; padding:0px; width:100%">
                                 <pre style="margin:0; padding:0">{{data.session.last_worker_status_traceback}}</pre>
                                 </div>
@@ -174,7 +179,7 @@
                                 {% else %}
                                 N.A.
                                 {% endif %}
-                                | <a href="/dashboard_messages?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&type=management&start=0">messages</a>
+                                | <a href="/dashboard_thing_messages?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&type=management&start=0">messages</a>
                                 <div id="divManagementTB" style="display: none; background:#f0f0f0; margin-left:5px; padding:5px; width:80%">
                                 <pre>{{data.session.last_management_status_traceback}}</pre>
                                 </div>
@@ -241,7 +246,7 @@
                                 </tr>
                                 <tr>
                                 <td valign="top"><b>Tools: &nbsp;</b></td><td>
-                                <a href="/remote_shell?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&type=management&start=0">Remote Shell</a>
+                                <a href="/dashboard_thing_shell?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&type=management&start=0">Remote Shell</a>
                                 {% if data.simulator %}
                                 {% if data.simulator.status == "Running" %}
                                 | <a href=/simulator_log?sid={{data.simulator.sid}}>Remote screen</a>
@@ -306,7 +311,7 @@
                                 </tr>
                                 {% endfor %}    
                                 </table>
-                                <a href="/dashboard_sessions?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}">View all</a>
+                                <a href="/dashboard_thing_sessions?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}">View all</a>
                                 <br />
                                 <br />
                                 
@@ -322,7 +327,7 @@
                                 </tr>
                                 {% endfor %} 
                                 </table>
-                                <a href="/dashboard_messages?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&type=worker&start=0">View more</a>
+                                <a href="/dashboard_thing_messages?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&type=worker&start=0">View more</a>
                                 <br />
                                 <br />
                                 
@@ -338,7 +343,7 @@
                                 </tr>
                                 {% endfor %} 
                                 </table>
-                                <a href="/dashboard_messages?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&type=management&start=0">View all</a>
+                                <a href="/dashboard_thing_messages?tid={{data.thing.tid}}&intaid={{data.thing.app.id}}&orpool={{data.orpool}}&type=management&start=0">View all</a>
 
                             </div>
                         </div>

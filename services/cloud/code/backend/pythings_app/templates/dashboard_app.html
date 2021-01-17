@@ -28,6 +28,8 @@
                             <div class="card-body">
                                 <table class="dashboard_noborder" style="margin-top:0px">
                                 <!-- <font style="font-weight:500; font-size:1.2em">Details</font> -->
+                                <tr><td><b>App ID</b></td><td>{{data.app.aid}}</td></tr>  
+                                                            
                                 <tr><td><b>Name:</b></td><td>
                                 {% if data.edit == 'app_name' %}
                                 <form action="/dashboard_app/" method="POST">
@@ -42,7 +44,6 @@
                                 {{data.app.name}} | <a href="/dashboard_app/?intaid={{data.app.id}}&pool={{data.pool.name}}&edit=app_name">Change</a>
                                 {% endif %}
                                 </td></tr>
-                                <tr><td><b>AID:</b></td><td>{{data.app.aid}}</td></tr>  
                                 <tr>
                                 <td>
                                  <b>Last&nbsp;edit:</b>
@@ -52,7 +53,7 @@
                                 </td>
                                 </tr>
                                 <!--  <tr><td><b>Latest version:</b></td><td> {{data.app_latest_commit.name}}</td></tr> -->
-                                <tr><td><b>Tools:</b></td><td><a href="/app_editor/?intaid={{data.app.id}}">Code editor</a></td></tr>
+                                <tr><td><b>Tools:</b></td><td><a href="/dashboard_app_code_editor/?intaid={{data.app.id}}">Code editor</a></td></tr>
                                 {% if data.action == 'delete' %}
                                 <tr><td colspan="2" style="background-color:#ffee8e; border:1px solid #A9A9A9; padding:5px">WARNING: you are deleting the App named "<b>{{data.app.name}}</b>", this operation will also delete <i>all</i> of its thing data and <u>cannot be undone</u>.</td></tr>
                                  <tr><td><b>Actions:</b></td><td><a href="/dashboard_app/?intaid={{data.app.id}}"><b>Cancel</b></a> | <a href="/dashboard_app/?intaid={{data.app.id}}&action=delete&confirmed=True">Confirm delete App</a></td></tr>

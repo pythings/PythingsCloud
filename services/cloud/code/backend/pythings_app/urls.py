@@ -26,18 +26,17 @@ urlpatterns = [
     url(r'^account/$', views.account, name='account'),
     url(r'^register/$', views.register, name='register'),
 
-    # Apps and Things views
+    # App and Thing views
     url(r'^dashboard/$', views.dashboard, name='dashboard'),
     url(r'^dashboard_app/$', views.dashboard_app, name='dashboard_app'),
-    url(r'^dashboard_things/$', views.dashboard_things, name='dashboard_things'),
+    url(r'^dashboard_app_code_editor/$', views.dashboard_app_code_editor, name='dashboard_app_code_editor'),
     url(r'^dashboard_thing/$', views.dashboard_thing, name='dashboard_thing'),
-    url(r'^dashboard_sessions/$', views.dashboard_sessions, name='dashboard_sessions'),
-    url(r'^dashboard_messages/$', views.dashboard_messages, name='dashboard_messages'),
-    url(r'^app_editor/$', views.app_editor, name='app_editor'),
+    url(r'^dashboard_thing_sessions/$', views.dashboard_thing_sessions, name='dashboard_thing_sessions'),
+    url(r'^dashboard_thing_messages/$', views.dashboard_thing_messages, name='dashboard_thing_messages'),
+    url(r'^dashboard_thing_shell/$', views.dashboard_thing_shell, name='dashboard_thing_shell'),   
     url(r'^new_app/$', views.new_app, name='new_app'),
     url(r'^list_apps/$', views.list_apps, name='list_apps'),
     url(r'^new_thing/$', views.new_thing, name='new_thing'),
-    url(r'^remote_shell/$', views.remote_shell, name='remote_shell'),   
 
     # Websetup
     url(r'^websetup/$', views.websetup, name='websetup'),
@@ -47,11 +46,11 @@ urlpatterns = [
     #  APIs (web) v1
     #===========================
 
-    # Web IDE
-    url(r'^api/web/v1/ide/uploadfile$', apis_web_v1.uploadfile.as_view(), name='uploadfile'),
+    # Code editor IDE
+    url(r'^api/web/v1/code_editor/uploadfile$', apis_web_v1.api_code_editor_uploadfile.as_view(), name='api_code_editor_uploadfile'),
     
     # Messages
-    url(r'^api/web/v1/msg/worker/get$', apis_web_v1.api_msg_worker_get.as_view(), name='api_web_msg_worker'),
+    url(r'^api/web/v1/msg/worker/get$', apis_web_v1.api_msg_worker_get.as_view(), name='api_web_msg_worker_get'),
     url(r'^api/web/v1/msg/management/new$', apis_web_v1.api_msg_management_new.as_view(), name='api_web_msg_management_new'),
     url(r'^api/web/v1/msg/management/get$', apis_web_v1.api_msg_management_get.as_view(), name='api_web_msg_management_get'),
 
