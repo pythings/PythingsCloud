@@ -1,9 +1,13 @@
 
 
-# Pythings Cloud
+# The Pythings Cloud
 
-This software is licensed under the Apache License 2.0 unless otherwise specificed.
 
+Pythings is a quick and easy way of programming IoT devices, directly from a web browser, in Python. It shines on microcontrollers like the ESP8266 and the ESP32, but it works nicely also on small Linux boards.
+
+The Pythings Cloud is where you can control and orchestrate all of your devices (Things) running [PythingsOS](https://github.com/pythings/PythingsOS). It provides simple yet powerful tools for device management, code editing and data visualization to get you started immediately, plus a set of APIs.
+
+![Image of the Pythings Cloud](https://pythings.io/static/img/custom/PythingsScreenshot.png)
 
 ## Quickstart
 
@@ -29,12 +33,14 @@ Play
 
 	$ pythingscloud/populate
 	
-    # ...you can now point your browser to localhost or the server address
-    #    and login using user=testuser@pythings.local, pass=testpass.
+    # ...you can now point your browser to "localhost" (or the server address),
+    #    and login using "testuser@pythings.local" and password "testpass".
 
 Clean
 
 	# pythingscloud/clean
+	
+p.s. the scripts above are mainly just wrappers for Bash and Docker Compose commands.
 
 
 ## More commands
@@ -57,11 +63,6 @@ Update cycle:
     $ pythingscloud/build
     $ pythingscloud/clean
     $ pythingscloud/run
-
-Daemon (monitors for git changes every minute and applies the update cycle)
-
-    pythingscloud/daemon
-
 
 
 ### Usage for development
@@ -118,10 +119,10 @@ Setting the DJANGO_DEBUG mode causes to enable the development server in full mo
 
 
 
-	
+## Licence
 
 
-
+This software is licensed under the Apache Licence version 2.0, unless otherwise specificed.
 
 
 
