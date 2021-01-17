@@ -14,17 +14,9 @@ if not os.path.isfile('manage.py'):
 # Set Python executable
 PYTHON = 'python3'
 
-#--------------------
-# Utility functions
-#--------------------
-
 def run(command):
     local(command)
 
-
-#--------------------
-# Run
-#--------------------
 
 @task
 def shell():
@@ -41,10 +33,6 @@ def runserver(noreload=False):
         run('{} manage.py runserver 0.0.0.0:8080'.format(PYTHON))
 
 
-#-----------------------------
-#   Install
-#-----------------------------
-
 @task
 def install(what=None, env="local", noinput=False):    
     if noinput:
@@ -55,9 +43,6 @@ def install(what=None, env="local", noinput=False):
         run('{} manage.py migrate'.format(PYTHON))
 
 
-#-----------------------------
-#   Populate
-#-----------------------------
 @task
 def populate(env="local"):
 
@@ -72,18 +57,13 @@ def populate(env="local"):
             print('No poulate found for {}... ({})'.format(app,populate_file))
 
 
-#-----------------------------
-#   Custom management
-#-----------------------------
 @task
 def management(app=None, command=None, env="local"):
     if not app or not command:
         raise Exception('app and command are required!')
     run("{} manage.py {}_{}".format(PYTHON,app,command))
 
-#-----------------------------
-#   Migrations
-#-----------------------------
+
 @task
 def makemigrations(what=None, env="local", noinput=False):
     if noinput:
@@ -98,10 +78,6 @@ def migrate(app=None, noinput=False):
     else:
         run('{} manage.py migrate'.format(PYTHON))
 
-
-#-----------------------------
-#   Tests
-#-----------------------------
 @task
 def test(what=None):
     if what:
@@ -110,9 +86,6 @@ def test(what=None):
         run('{} manage.py test'.format(PYTHON))
 
 
-#-----------------------------
-#   Deploy
-#-----------------------------
 @task
 def collect():
     run('{} manage.py collectstatic'.format(PYTHON))
