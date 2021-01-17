@@ -1,17 +1,15 @@
 import json
 import logging
-import random
 from datetime import timedelta
         
-from backend.pythings_app.tests.common import BaseAPITestCase
+from .common import BaseAPITestCase
 from django.contrib.auth.models import User
-from backend.pythings_app.models import WorkerMessage, ManagementMessage, App, Thing, Pool, Settings, Profile, WorkerMessageHandler, MessageCounter
-from backend.pythings_app import apis_web_v1 as apis 
-from ..common import dt
+from ...pythings_app.models import WorkerMessage, ManagementMessage, App, Thing, Pool, Settings, Profile, WorkerMessageHandler, MessageCounter
+from ...common.time import dt
 
 # Logging
 logging.basicConfig(level=logging.ERROR)
-logger = logging.getLogger("backend")
+logger = logging.getLogger('backend')
 
 
 class TestApi(BaseAPITestCase):
@@ -132,7 +130,6 @@ class TestApi(BaseAPITestCase):
         self.assertEqual(content_dict['reply'], None)
 
 
- 
     def test_api_web_worker(self):        
         
         # Create sample worker messages, for about a month of hour-data.         
@@ -233,21 +230,19 @@ class TestApi(BaseAPITestCase):
         self.assertEqual(type(worker_messages[0].data), str)
         self.assertEqual(worker_messages[0].data, 'Hello world!')
 
-        # Post a worker message too big, won't work
+        # Post a worker message too big (840chars), won't work
         big_msg = {}
-        for i in range(0,100):
+        for i in range(0,50):
             big_msg['label_'+str(i)] = i/10.0
         resp = self.post('/api/v1/apps/worker/', data={'token': token, 'msg': big_msg})
         self.assertEqual(resp.status_code, 400)
 
         # Set plan Things limit to 1
-        #self.user.profile.plan_things_limit = 1
-        #self.user.profile.save()
+        self.user.profile.plan_things_limit = 1
+        self.user.profile.save()
 
         # Register another Thing, won't work as device limit is hit
-        #resp = self.post('/api/v1/things/register/', data={'tid': '223344556611', 'aid': 'rh398rh20cr9h209rh2r2092j1d39f27ex'})
-        #self.assertEqual(resp.status_code, 401)
-
-
+        resp = self.post('/api/v1/things/register/', data={'tid': '223344556611', 'aid': 'rh398rh20cr9h209rh2r2092j1d39f27ex'})
+        self.assertEqual(resp.status_code, 401)
 
 

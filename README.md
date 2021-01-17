@@ -65,7 +65,7 @@ Update cycle:
     $ pythingscloud/run
 
 
-### Usage for development
+### Usage for development ![Testing status](https://travis-ci.org/pythings/PythingsCloud.svg?branch=master)
 
 If you set DEBUG=True, Django will use its development server which allows to live-monitor code and static filed changes. To enable live code changes, you also need to mount the code from services/cloud/code as as a volume inside the cloud service container, see the docker-compose-dev.yml for and example.
 
@@ -78,7 +78,8 @@ When you edit the ORM model, remember that you need to make the migrations and m
 
     $ pythingscloud/makemigrations
     $ pythingscloud/migrate
-    
+
+Every commit is automatically tested with Travis-CI. [Check status on Travis](https://travis-ci.org/pythings/PythingsCloud.svg?branch=master).    
 
 
 ### Environments variables

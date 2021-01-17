@@ -1,0 +1,12 @@
+language: python
+
+services:
+  - docker
+
+before_install:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - pythingscloud/setup
+  - pythingscloud/build
+  - pythingscloud/run
+
+script: sleep 30 && pythingscloud/test
