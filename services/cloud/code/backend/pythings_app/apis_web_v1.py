@@ -6,90 +6,21 @@ import logging
 from django.http import HttpResponse
 from django.utils import timezone
 from django.contrib.auth import authenticate
-from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.response import Response
 
 # Backend imports
-from backend.common.utils import format_exception
+from ..common.utils import format_exception
+from ..common.time import dt_from_str, dt_from_s
+from ..common.returns import ok200, error400, error401, error404, error500
+from ..common.returns import ok200rest, error400rest, error401rest, error404rest, error500rest
 from .models import ManagementMessage, App, Thing, File, Profile, WorkerMessageHandler
-from .common import dt_from_str, dt_from_s, dt_to_str
 
 # Setup logging
 logger = logging.getLogger(__name__)
 
-
 #==============================
-#  Common returns
-#==============================
-
-# Ok (with data)
-def ok200(caller=None, data=None):
-    return Response({"status": "OK", "data": data}, status=status.HTTP_200_OK)
-
-# Error 400
-def error400(caller=None, error_msg=None):
-    return Response({"status": "ERROR", "data": error_msg}, status=status.HTTP_400_BAD_REQUEST)
-
-# Error 401
-def error401(caller=None, error_msg=None):
-    return Response({"status": "ERROR", "data": error_msg}, status=status.HTTP_401_UNAUTHORIZED)
-
-# Error 404
-def error404(caller=None, error_msg=None):
-    return Response({"status": "ERROR", "data": error_msg}, status=status.HTTP_404_NOT_FOUND)
-
-# Error 500
-def error500(caller=None, error_msg=None):
-    return Response({"status": "ERROR", "data": error_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-
-#=======================================
-#  Common returns (more REST-compliant)
-#=======================================
-
-# Ok (with data)
-def ok200rest(caller=None, data=None):
-    return Response(data, status=status.HTTP_200_OK)
-
-# Error 400
-def error400rest(caller=None, error_msg=None):
-    return Response({'detail': error_msg}, status=status.HTTP_400_BAD_REQUEST)
-
-# Error 401
-def error401rest(caller=None, error_msg=None):
-    return Response({'detail': error_msg}, status=status.HTTP_401_UNAUTHORIZED)
-
-# Error 404
-def error404rest(caller=None, error_msg=None):
-    return Response({'detail': error_msg}, status=status.HTTP_404_NOT_FOUND)
-
-# Error 500
-def error500rest(caller=None, error_msg=None):
-    return Response({'detail': error_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-
-#==============================
-#  Base public API class
-#==============================
-
-class publicAPI(APIView):
-    '''Base public API class'''
-
-    def post(self, request):
-        return self._post(request)
-
-    def get(self, request):
-        return self._get(request)
-
-    def log(self, level, msg, *strings):
-        logger.log(level, self.__class__.__name__ + ': ' + msg, *strings)
-
-
-#==============================
-#  Pythings auth
+#  Pythings Web auth
 #==============================
 
 def pythings_web_authenticate(request, caller):
@@ -136,11 +67,29 @@ def pythings_web_authenticate(request, caller):
         return error500rest(caller=caller, error_msg='Got exception in processing request: ' + str(e))
 
 
+
 #==============================
-#  Base private API class
+#  Base public Web API class
 #==============================
 
-class privateWebAPI(APIView):
+class PublicWebAPI(APIView):
+    '''Base public API class'''
+
+    def post(self, request):
+        return self._post(request)
+
+    def get(self, request):
+        return self._get(request)
+
+    def log(self, level, msg, *strings):
+        logger.log(level, self.__class__.__name__ + ': ' + msg, *strings)
+
+
+#==============================
+#  Base private Web API class
+#==============================
+
+class PrivateWebAPI(APIView):
     '''Base private API class'''
 
     # POST
@@ -183,11 +132,11 @@ class privateWebAPI(APIView):
 
 
 #==============================
-#  Save application code
+#  Save code from Web Editor
 #==============================
 
-class uploadfile(privateWebAPI):
-    '''Api for uploading a file'''
+class api_code_editor_uploadfile(PrivateWebAPI):
+    '''Api for uploading a file fro the Web code editor'''
 
     def _post(self, request):
 
@@ -244,21 +193,12 @@ class uploadfile(privateWebAPI):
         return ok200()
 
 
-
-
-#============================================================
-#
-#                   T H I N G S    A P I s 
-#
-#===========================================================
-
-
 #==============================
 #  Management APIs
 #==============================
 
-class api_msg_management_new(privateWebAPI):
-    '''Api for creating a new management message'''
+class api_msg_management_new(PrivateWebAPI):
+    '''API for creating a new management message'''
 
     def _post(self, request):
 
@@ -283,9 +223,6 @@ class api_msg_management_new(privateWebAPI):
             return error400rest(caller=self, error_msg='Not existent Thing or no access rights')
             logger.info('SECURITY: Denied access for thing with tid="{}" for user={}"'.format(tid, self.user))
 
-        # Handle timestamp
-        # if timestamp is epoch, or epoch:ms or datetime ISO....
- 
         # Store message
         management_message = ManagementMessage.objects.create(aid=thing.app.aid, tid=tid, data=msg)
 
@@ -293,8 +230,8 @@ class api_msg_management_new(privateWebAPI):
         return ok200rest(caller=self, data={'mid': management_message.uuid})
 
 
-class api_msg_management_get(privateWebAPI):
-    '''Api for getting a specific management message'''
+class api_msg_management_get(PrivateWebAPI):
+    '''API for getting a specific management message'''
 
     def _post(self, request):
 
@@ -320,8 +257,9 @@ class api_msg_management_get(privateWebAPI):
 #  Worker APIs
 #==============================
 
-class api_msg_worker_get(privateWebAPI):
-    
+class api_msg_worker_get(PrivateWebAPI):
+    '''API for getting worker messages'''
+
     def _post(self, request):
 
         # Obtain values
@@ -379,9 +317,4 @@ class api_msg_worker_get(privateWebAPI):
             worker_messages.append({'ts':message.ts, 'data':message.data})
         
         return ok200rest(caller=self, data=worker_messages)
-
-
-
-
-
 

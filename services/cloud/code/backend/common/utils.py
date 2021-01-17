@@ -2,9 +2,8 @@ import os
 import traceback
 import hashlib
 import random
-import subprocess
 import logging
-from collections import namedtuple
+import base64
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -43,30 +42,32 @@ def booleanize(*args, **kwargs):
 def send_email(to, subject, text):
 
     # Importing here instead of on top avoids circular dependencies problems when loading booleanize in settings
-    from backend.settings import BACKEND_EMAIL_APIKEY, BACKEND_EMAIL_FROM, BACKEND_EMAIL_SERVICE
-
-    if BACKEND_EMAIL_SERVICE == 'Sendgrid':
+    from django.conf import settings
+    
+    if settings.BACKEND_EMAIL_SERVICE == 'Sendgrid':
         import sendgrid
-        from sendgrid.helpers.mail import Email,Content,Mail
+        from sendgrid.helpers.mail import Email, Content, Mail
 
-        sg = sendgrid.SendGridAPIClient(apikey=BACKEND_EMAIL_APIKEY)
-        from_email = Email(BACKEND_EMAIL_FROM)
+        sg = sendgrid.SendGridAPIClient(apikey=settings.BACKEND_EMAIL_APIKEY)
+        from_email = Email(settings.BACKEND_EMAIL_FROM)
         to_email = Email(to)
         subject = subject
         content = Content('text/plain', text)
         mail = Mail(from_email, subject, to_email, content)
+        
+        # Send the email
         response = sg.client.mail.send.post(request_body=mail.get())
-        #logger.debug(response.status_code)
-        #logger.debug(response.body)
-        #logger.debug(response.headers)
+        
+        # Log. Also response.body and response.headers are available
+        logger.debug('Sent email, response statuc code: {}'.format(response.status_code))
     
 
 def format_exception(e, debug=False):
     
     # Importing here instead of on top avoids circular dependencies problems when loading booleanize in settings
-    from backend.settings import DEBUG
+    from django.conf import settings
 
-    if DEBUG:
+    if settings.DEBUG:
         # Cutting away the last char removed the newline at the end of the stacktrace 
         return str('Got exception "{}" of type "{}" with traceback:\n{}'.format(e.__class__.__name__, type(e), traceback.format_exc()))[:-1]
     else:
@@ -75,12 +76,6 @@ def format_exception(e, debug=False):
 
 def log_user_activity(level, msg, request, caller=None):
 
-    # Get the caller function name through inspect with some logic
-    #import inspect
-    #caller =  inspect.stack()[1][3]
-    #if caller == "post":
-    #    caller =  inspect.stack()[2][3]
-    
     try:
         msg = str(caller) + " view - USER " + str(request.user.email) + ": " + str(msg)
     except AttributeError:
@@ -103,21 +98,19 @@ def username_hash(email):
 
 
 def random_username():
-    '''Create a random string of 156 chars to be used as username'''             
-    #username = ''.join(random.choice('abcdefghilmnopqrtuvz') for _ in range(16))
-    #import uuid
-    #username = str(uuid4()).replace('-','')[0:16] # or [0:22]
+    '''Create a random string of 156 alphanumeric chars to be used as username'''
     username = ''.join(random.choice('qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789') for _ in range(22))
     return username
 
 
 def discover_apps(folder, only_names=False):
+    '''Discover Django Apps, where an "App" is a folder ending with "app"'''
 
     # List directories in folder
     dirs = [ dir for dir in os.listdir(folder) if os.path.isdir(os.path.join(folder,dir)) ]
-    
+
+    # Detect apps    
     apps = ()
-    # Detect apps
     for dir in dirs:
         if dir.endswith('app'):
             if only_names:
@@ -129,100 +122,16 @@ def discover_apps(folder, only_names=False):
     return apps
 
 
-def sanitize_shell_encoding(text):
-    return text.encode("utf-8", errors="ignore")
+def decode_base64(data):
+    """Decode base64, padding being optional. Routine by Simon Sapin, taken from Stack overlfow:
+    https://stackoverflow.com/questions/2941995/python-ignore-incorrect-padding-error-when-base64-decoding
 
+    :param data: Base64 data as an ASCII byte string
+    :returns: The decoded byte string.
 
-def format_shell_error(stdout, stderr, exit_code):
-    
-    string  = '\n#---------------------------------'
-    string += '\n# Shell exited with exit code {}'.format(exit_code)
-    string += '\n#---------------------------------\n'
-    string += '\nStandard output: "'
-    string += sanitize_shell_encoding(stdout)
-    string += '"\n\nStandard error: "'
-    string += sanitize_shell_encoding(stderr) +'"\n\n'
-    string += '#---------------------------------\n'
-    string += '# End Shell output\n'
-    string += '#---------------------------------\n'
+    """
+    missing_padding = len(data) % 4
+    if missing_padding != 0:
+        data += b'='* (4 - missing_padding)
+    return base64.decodestring(data)
 
-    return string
-
-
-def os_shell(command, capture=False, verbose=False, interactive=False, silent=False):
-    '''Execute a command in the OS shell. By default prints everything. If the capture switch is set,
-    then it returns a namedtuple with stdout, stderr, and exit code.'''
-    
-    if capture and verbose:
-        raise Exception('You cannot ask at the same time for capture and verbose, sorry')
-
-    # Log command
-    logger.debug('Shell executing command: "%s"', command)
-
-    # Execute command in interactive mode    
-    if verbose or interactive:
-        exit_code = subprocess.call(command, shell=True)
-        if exit_code == 0:
-            return True
-        else:
-            return False
-
-    # Execute command getting stdout and stderr
-    # http://www.saltycrane.com/blog/2008/09/how-get-stdout-and-stderr-using-python-subprocess-module/
-    
-    process          = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    (stdout, stderr) = process.communicate()
-    exit_code        = process.wait()
-
-    # Convert to str (Python 3)
-    stdout = stdout.decode(encoding='UTF-8')
-    stderr = stderr.decode(encoding='UTF-8')
-
-    # Formatting..
-    stdout = stdout[:-1] if (stdout and stdout[-1] == '\n') else stdout
-    stderr = stderr[:-1] if (stderr and stderr[-1] == '\n') else stderr
-
-    # Output namedtuple
-    Output = namedtuple('Output', 'stdout stderr exit_code')
-
-    if exit_code != 0:
-        if capture:
-            return Output(stdout, stderr, exit_code)
-        else:
-            print(format_shell_error(stdout, stderr, exit_code))      
-            return False    
-    else:
-        if capture:
-            return Output(stdout, stderr, exit_code)
-        elif not silent:
-            # Just print stdout and stderr cleanly
-            print(stdout)
-            print(stderr)
-            return True
-        else:
-            return True
-
-
-def get_md5(string):
-    if not string:
-        raise Exception("Colund not compute md5 of empty/None value")
-    
-    m = hashlib.md5()
-    
-    # Fix for Python3
-    try:
-        if isinstance(string,unicode):
-            string=string.encode('utf-8')
-    except NameError:
-        string=string.encode('utf-8')
-        
-    m.update(string)
-    md5 = str(m.hexdigest())
-    return md5
-
-
-def fix_url_encode(url):
-    url_unicode =  unicode(url)              
-    url_sanitized = url_unicode.encode('utf-8')              
-    url_cleaned = urllib.unquote(url_sanitized)
-    return url_cleaned    

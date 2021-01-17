@@ -28,15 +28,24 @@
                         <div class="card">
                             <div class="card-body">
                                 <h3>Apps</h3>
+                                {% if data.apps %}
                                 <table class="dashboard" style="width:100%; max-width:500px">
+                                  <tr>
+                                    <td align="center">
+                                    <b>Name</b>
+                                    </td>
+                                    <td align="center" class="hideable">
+                                    <b>ID</b>
+                                    </td>
+                                   </tr>                                
                                 {% for app in data.apps %}
                                 <tr>
                                    <td><a href="/dashboard_app/?intaid={{app.id}}"><b>{{app.name}}</b></a></td>
-                                   <!-- <td class="hideable">AID: {{app.aid}}</td> -->
-                                   <td>Last edit: {{ app.latest_commit_ts }}</td>
+                                   <td class="hideable"> {{app.aid}} <!-- {{ app.latest_commit_ts }} --> </td>
                                 </tr>
                                 {% endfor %}
                                 </table>
+                                {% endif %}
                                 <br/>
                                 <a href="/new_app/">New App...</a>   
                             </div>

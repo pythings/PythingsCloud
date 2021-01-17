@@ -72,7 +72,7 @@
                                 <br/>
                                 <h3>Create new </h3>       
                                 <table><tr><td>Content:</td><td>
-                                <form action="/dashboard_messages/" method="POST">
+                                <form action="/dashboard_thing_messages/" method="POST">
                                 {% csrf_token %}
                                 <input type="hidden" name="orpool" value="{{data.orpool}}">
                                 <input type='hidden' name='tid' value='{{data.thing.tid}}' />

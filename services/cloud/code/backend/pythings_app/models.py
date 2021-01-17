@@ -9,9 +9,6 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.contrib.postgres.fields import JSONField
 
-# Backend imports
-from backend.common.utils import format_exception
-
 # Setup logging
 logger = logging.getLogger(__name__) 
 

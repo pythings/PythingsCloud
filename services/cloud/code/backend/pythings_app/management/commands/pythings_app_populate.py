@@ -14,8 +14,8 @@ class Command(BaseCommand):
 
             # Create test user
             print('Creating demo user with mail={}'.format(email))
-            from backend.pythings_app.common import random_string
-            testuser = User.objects.create_user(random_string(), password='testpass', email=email)
+            from ....common.utils import random_username 
+            testuser = User.objects.create_user(random_username(), password='testpass', email=email)
             testuser.save()
             
             # Create the profile as well

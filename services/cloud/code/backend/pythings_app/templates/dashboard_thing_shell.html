@@ -54,7 +54,7 @@
 {% if message.reply %}{{message.reply_clean}}
 {% endif %}{% endfor %}</pre>
 
-                                <form action="/remote_shell/" method="GET" style='background-color:black; color:#ffffff; font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; font-size:13px; padding-bottom:5px'>
+                                <form action="/dashboard_thing_shell/" method="GET" style='background-color:black; color:#ffffff; font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; font-size:13px; padding-bottom:5px'>
                                 <!-- {% csrf_token %}  -->
                                 <input type="hidden" name="orpool" value="{{data.orpool}}">
                                 <input type='hidden' name='tid' value='{{data.thing.tid}}' />

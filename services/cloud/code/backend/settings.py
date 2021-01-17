@@ -4,9 +4,7 @@ import os
 from django.core.exceptions import ImproperlyConfigured
 
 # Backend imports
-from backend.common.utils import discover_apps
-from backend.common.utils import booleanize
-
+from .common.utils import discover_apps, booleanize
 
 #===============================
 #  Base settings
@@ -35,10 +33,11 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
 )
 
 # Apps auto discovery
-INSTALLED_APPS = INSTALLED_APPS + discover_apps(BASE_DIR)
+INSTALLED_APPS = INSTALLED_APPS + discover_apps(BASE_DIR+'/backend')
 
 # Middleware
 MIDDLEWARE_CLASSES = (
@@ -205,4 +204,10 @@ LOGGING = {
     }
 }
 
+# OS versions available
+OS_VERSIONS = ['v1.0.0-rc3', 'v1.0.0', 'v1.1.0', 'factory']
+OS_VERSIONS.reverse()
+
+# Default timeout for PythingsOS API calls before declaring timeout
+CONTACT_TIMEOUT_TOLERANCE = 60
 
