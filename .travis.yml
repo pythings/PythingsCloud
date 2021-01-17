@@ -1,0 +1,11 @@
+language: python
+
+services:
+  - docker
+
+before_install:
+  - pythingscloud/setup
+  - pythingscloud/build
+  - pythingscloud/run
+
+script: sleep 30 && pythingscloud/test
