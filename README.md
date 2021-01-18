@@ -1,6 +1,6 @@
 
 
-# The Pythings Cloud
+# Pythings Cloud
 
 
 Pythings is a quick and easy way of programming IoT devices, directly from a web browser, in Python. It shines on microcontrollers like the ESP8266 and the ESP32, but it works nicely also on small Linux boards.
@@ -101,6 +101,7 @@ In the cloud service, you can configure things like project name, database param
     # Django conf
     DJANGO_SECRET_KEY="#k%566hw@w%1((_&=640_4w#p)piwt$m4%#(9x^+it5(h1b6zy"
     DJANGO_DEBUG=False
+    DJANGO_DEV_SERVER=False
 
     # Dabase conf (usually overrided by sourcing the db_conf.sh script)
     DJANGO_DB_ENGINE="django.db.backends.sqlite3"
@@ -116,7 +117,7 @@ In the cloud service, you can configure things like project name, database param
 	
 	
 
-Setting the DJANGO_DEBUG mode causes to enable the development server in full mode, to have much more verbose 500 error pages with all the stack traces and context (the classic Django yellow page) and to have stack-traces logged on more than one line (by default they are logged one per line to play nice with log aggregation tools)
+Setting the DJANGO_DEBUG mode together with the DJANGO_DEV_SERVER causes to enable the development server in "full" dev mode, which means to have much more verbose 500 error pages with all the stack traces and their context (the classic Django yellow page), plus to have stack-traces logged on more than one line (by default they are logged one per line to play nice with log aggregation tools)
 
 
 

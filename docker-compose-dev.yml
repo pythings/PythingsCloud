@@ -17,6 +17,7 @@ services:
     hostname: cloud
     environment:
       - SAFEMODE=False
+      - DJANGO_DEV_SERVER=True
       - DJANGO_DEBUG=True
       - DJANGO_LOG_LEVEL=ERROR
       #- DJANGO_SECRET_KEY=
