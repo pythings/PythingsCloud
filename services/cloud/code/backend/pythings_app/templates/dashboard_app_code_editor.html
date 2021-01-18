@@ -1,6 +1,9 @@
 {% load static %} 
 {% include "header.html" %}
+
+{% if not data.embed %}
 {% include "navigation.html" %}
+{% endif %}
 
 <!-- START  javascripts -->
 <script src="/static/ace/ace.js" type="text/javascript" charset="utf-8"></script>
@@ -64,7 +67,7 @@ Save = function(reload) {
 </script>
 <!-- END  javascripts -->
 
-
+                {% if not data.embed %}
                 <!-- Title area start -->
                 <br/>
                 <div class="row">
@@ -77,6 +80,7 @@ Save = function(reload) {
                     </div>
                 </div>
                 <!-- Title area end -->
+                {% endif %}
 
                 <!-- Simple page area start -->
                 <br/>
@@ -89,7 +93,7 @@ Save = function(reload) {
         <!-- START commit browser (for small screens) -->
         <div class="showable">
           <center>
-            <form action="/dashboard_app_code_editor" method="get">
+            <form action="/dashboard_app_code_editor{{data.embed}}" method="get">
             <b>Commit:</b> <input type="hidden" name="intaid" value="{{data.app.id}}">
             <select name="cid" onchange="this.form.submit()">
 
@@ -152,7 +156,7 @@ Save = function(reload) {
           {% if data.global_app_uncommitted_files|length != 0 %}
 
               Uncommitted changes
-              <form action="/dashboard_app_code_editor" method="get">
+              <form action="/dashboard_app_code_editor{{data.embed}}" method="get">
               <input type="hidden" name="intaid" value="{{data.app.id}}">
               <input type="hidden" name="commit" value="True"> 
               <button class="simplebutton" type="button" onclick="this.form.submit()">Commit</button>
@@ -162,7 +166,7 @@ Save = function(reload) {
           
               Everything committed
 
-              <form action="/dashboard_app_code_editor" method="get">
+              <form action="/dashboard_app_code_editor{{data.embed}}" method="get">
               <input type="hidden" name="intaid" value="{{data.app.id}}">
               <input type="hidden" name="cid" value="{{data.cid}}">
                 
@@ -208,7 +212,7 @@ Save = function(reload) {
           </td>
 
           <td valign="top" align="center" class="hideable">
-            <form action="/dashboard_app_code_editor" method="get">
+            <form action="/dashboard_app_code_editor{{data.embed}}" method="get">
             <input type="hidden" name="intaid" value="{{data.app.id}}">
             <select name="cid" onchange="this.form.submit()">
 
@@ -290,13 +294,6 @@ Save = function(reload) {
                             </script>
                             <!-- END Editor body  -->
                             {% endif %}        
-        
-        
-        
-        
-        
-        
-        
 
                             </div>
                         </div>
@@ -304,7 +301,9 @@ Save = function(reload) {
                 </div>
                 <!-- Simple page area end -->
 
+{% if not data.embed %}
 {% include "components/timezone_note.html" %}
+{% endif %}
 
 {% include "footer.html" %}
 

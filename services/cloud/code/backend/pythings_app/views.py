@@ -557,6 +557,7 @@ def dashboard_app(request):
     data['pool'] = None
     data['orpool'] = request.GET.get('orpool',None)
     data['action'] = request.GET.get('action', None)
+    data['view'] = request.GET.get('view', 'editor')
     confirmed = request.GET.get('confirmed', False)
           
     # Get AID form GET request
@@ -1631,13 +1632,14 @@ def new_app(request):
 #===========================
 
 @private_view
-def dashboard_app_code_editor(request):
+def dashboard_app_code_editor(request, embed=False):
 
     # Init data
     data={}
     data['user']  = request.user
     data['profile'] = Profile.objects.get(user=request.user)
     data['app'] = None
+    data['embed'] = '_embed' if embed else ''
 
     # Get data
     intaid    = request.GET.get('intaid', None)
@@ -1647,6 +1649,7 @@ def dashboard_app_code_editor(request):
     savednew  = request.GET.get('savednew', False)
     tagop     = request.GET.get('tagop', None)
     tagname   = request.GET.get('tagname', None)
+    openworker = booleanize(request.GET.get('openworker', False))
     
     data['savednew'] = savednew
     data['tagop'] = tagop
@@ -1670,6 +1673,11 @@ def dashboard_app_code_editor(request):
     except App.DoesNotExist:
         data['error'] = 'The app does not exist or you don\'t have access rights'
         return render(request, 'error.html', {'data': data})
+
+    # Do we have to open the worker by default?
+    if openworker:
+        file = File.objects.filter(app=app,name='worker_task.py').order_by('-ts').first()
+        fileid = file.id
 
     # Get the file if set
     if fileid:
@@ -1816,6 +1824,10 @@ def dashboard_app_code_editor(request):
 
     # Render
     return render(request, 'dashboard_app_code_editor.html', {'data': data})
+
+
+def dashboard_app_code_editor_embed(request):
+    return dashboard_app_code_editor(request, embed=True)
 
 
 #===========================

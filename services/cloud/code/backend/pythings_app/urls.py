@@ -30,6 +30,7 @@ urlpatterns = [
     url(r'^dashboard/$', views.dashboard, name='dashboard'),
     url(r'^dashboard_app/$', views.dashboard_app, name='dashboard_app'),
     url(r'^dashboard_app_code_editor/$', views.dashboard_app_code_editor, name='dashboard_app_code_editor'),
+    url(r'^dashboard_app_code_editor_embed/$', views.dashboard_app_code_editor_embed, name='dashboard_app_code_editor_embed'),
     url(r'^dashboard_thing/$', views.dashboard_thing, name='dashboard_thing'),
     url(r'^dashboard_thing_sessions/$', views.dashboard_thing_sessions, name='dashboard_thing_sessions'),
     url(r'^dashboard_thing_messages/$', views.dashboard_thing_messages, name='dashboard_thing_messages'),
