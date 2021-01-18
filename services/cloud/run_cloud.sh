@@ -36,6 +36,44 @@ if [[ "x$EXIT_CODE" != "x0" ]] ; then
 fi
 echo ""
 
+
+if [[ "x$DJANGO_DEV_SERVER" == "xTrue" ]] ; then
+    
 # Run the (development) server
-echo "Now starting the server and logging in /var/log/cloud/backend.log."
-cd /opt/code/ && exec fab runserver 2>> /var/log/cloud/backend.log
+    echo "Now starting the development server and logging in /var/log/cloud/backend.log."
+    cd /opt/code && exec python3 manage.py runserver 0.0.0.0:8080 2>> /var/log/cloud/backend.log
+
+else
+    # Move to the code dir
+    cd /opt/code
+    
+    # Collect static
+    echo "Collecting static files..."
+    python3 manage.py collectstatic -l # Link them instead of copying.
+
+    # Run uWSGI
+    echo "Now starting the uWSGI server and logging in /var/log/cloud/backend.log."
+
+    uwsgi --chdir=/opt/code \
+          --module=backend.wsgi \
+          --env DJANGO_SETTINGS_MODULE=backend.settings \
+          --master --pidfile=/tmp/project-master.pid \
+          --socket=127.0.0.1:49152 \
+          --static-map /static=/pythings/static \
+          --static-safe /opt/code \
+          --http :8080 \
+          --disable-logging 2>> /var/log/cloud/backend.log
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+

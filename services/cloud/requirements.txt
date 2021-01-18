@@ -11,3 +11,4 @@ psycopg2==2.8
 netifaces==0.10.6
 pytz==2013.7
 python-dateutil>=2.6.0
+uwsgi==2.0.19.1

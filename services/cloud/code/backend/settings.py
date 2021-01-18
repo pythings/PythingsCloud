@@ -56,7 +56,8 @@ ROOT_URLCONF = 'backend.urls'
 
 # Static files (Django will look for a 'static' dir in every App and serve properly)
 # Read more: https://docs.djangoproject.com/en/1.11/howto/static-files/
-STATIC_URL = '/static/'
+STATIC_URL  = '/static/'         # URL path
+STATIC_ROOT = '/pythings/static' # Filesystem path
 
 # Templates
 TEMPLATES = [
