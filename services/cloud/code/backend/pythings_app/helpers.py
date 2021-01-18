@@ -24,6 +24,7 @@ class WorkerTask(object):
         self.prev_value = 21
 
     def call(self):
+        \'\'\'This function gets called every "worker interval" seconds\'\'\'
 
         logger.debug('Called App worker task')
 
@@ -34,7 +35,7 @@ class WorkerTask(object):
         # Uncomment the following two lines, then save and commit to 
         # see the demo temperature readings on your Thing Dashboard.
 
-        #data = {'temperature_C': value}
+        #data = {'temperature': value}
         #return data
 
 '''
@@ -46,7 +47,10 @@ class ManagementTask(object):
         logger.debug('Initializing App management task')
 
     def call(self, data):
+        \'\'\'This function gets called every "management interval" seconds\'\'\'
+
         logger.debug('Called App management task with data {}', data)
+        
         return 'Got "{}"'.format(data)
 
 '''
