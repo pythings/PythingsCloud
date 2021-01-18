@@ -53,7 +53,14 @@
                                 </td>
                                 </tr>
                                 <!--  <tr><td><b>Latest version:</b></td><td> {{data.app_latest_commit.name}}</td></tr> -->
-                                <tr><td><b>Tools:</b></td><td><a href="/dashboard_app_code_editor/?intaid={{data.app.id}}">Code editor</a></td></tr>
+                                <tr><td><b>Views:</b></td>
+                                <td>
+                                {% if data.view == 'things' %}
+                                <a href="?intaid={{data.app.id}}&view=editor">Code editor</a> | App Things
+                                {% else %}
+                                Code editor | <a href="?intaid={{data.app.id}}&view=things"> App Things</a>
+                                {% endif %}
+                                </td></tr>
                                 {% if data.action == 'delete' %}
                                 <tr><td colspan="2" style="background-color:#ffee8e; border:1px solid #A9A9A9; padding:5px">WARNING: you are deleting the App named "<b>{{data.app.name}}</b>", this operation will also delete <i>all</i> of its thing data and <u>cannot be undone</u>.</td></tr>
                                  <tr><td><b>Actions:</b></td><td><a href="/dashboard_app/?intaid={{data.app.id}}"><b>Cancel</b></a> | <a href="/dashboard_app/?intaid={{data.app.id}}&action=delete&confirmed=True">Confirm delete App</a></td></tr>
@@ -264,6 +271,7 @@
 
 
                 <!-- Things list area start -->
+                {% if data.view == 'things' %}
                 <br/>
                 <div class="row">
                     <div class="col-xl-12 col-lg-12">
@@ -276,6 +284,32 @@
                     </div>
                 </div>
                 <!-- Things list area end -->
+                
+                
+                {% else %}
+                <!-- Code editor area start -->
+                <br/>
+                <div class="row">
+                    <div class="col-xl-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body" style="padding:0 !important" >
+                                <iframe src="/dashboard_app_code_editor_embed/?intaid={{data.app.id}}&openworker=True" id="target" style="width:100%; padding:0; border:0" scrolling="no"> 
+                                </iframe> 
+                                <script>
+                                    var div = document.getElementById("target");
+                                    div.onload = function() {
+                                    	div.style.height = '400px' // Terrible hack to prevent the div from never shrinking
+                                        div_height = div.contentWindow.document.body.scrollHeight + 'px';
+                                    	div.style.height = div_height                                    	
+                                    } 
+                                </script> 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Code editor area end -->
+
+                {% endif %}
 
 
 {% include "components/timezone_note.html" %}
@@ -293,7 +327,6 @@ function handleversionselect(){
     }     
 }
 </script>
-
 
 
 
