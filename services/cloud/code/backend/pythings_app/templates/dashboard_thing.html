@@ -53,6 +53,9 @@
                                 <tr><td><b>OS:</b></td>
                                 <td> 
                                 {{data.session.pythings_version}}
+                                {% if data.thing.frozen_os %}
+                                <font size="-1"><i>(frozen)</i></font>
+                                {% endif %}
                                 </td></tr>      
                                 
                                 <!-- Thing platform -->
