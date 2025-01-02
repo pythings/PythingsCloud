@@ -18,8 +18,8 @@ RUN mkdir -p ~/.ssh && echo "Host github.com\n\tStrictHostKeyChecking no\n" >> ~
 # Curl.
 RUN apt-get install curl -y
 
-# Install get-pip script
-RUN curl -O https://bootstrap.pypa.io/get-pip.py
+# Download get-pip script for Python 3.6
+RUN curl -O https://bootstrap.pypa.io/pip/3.6/get-pip.py
 
 # Install Python and pip in this order (first Python 3 and then Python 2), or 
 # you will end ap with python defaulting to python2 and pip defaulting to pip3
@@ -27,10 +27,10 @@ RUN curl -O https://bootstrap.pypa.io/get-pip.py
 
 # Install Python3 and Pip3 (python3-distutils required for pip3)
 RUN  apt-get install python3 python3-distutils -y 
-RUN  python3 get-pip.py 'pip==10.0.1'
+RUN  python3 get-pip.py 'pip==21.3.1'
 
 # Required for building pycrypto for Python3
-RUN apt-get install build-essential python-dev python3-dev -y
+RUN apt-get install build-essential python-dev python3-dev libssl-dev -y
 
 # Install postgres driver required for psycopg2
 RUN apt-get install libpq-dev -y

@@ -6,7 +6,7 @@ MAINTAINER Stefano Alberto Russo <stefano.russo@gmail.com>
 #------------------------
 
 # Add repo
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main" >> /etc/apt/sources.list.d/pgdg.list
+RUN echo "deb http://apt-archive.postgresql.org/pub/repos/apt/ bionic-pgdg main" >> /etc/apt/sources.list.d/pgdg.list
 RUN wget -q https://www.postgresql.org/media/keys/ACCC4CF8.asc -O - | sudo apt-key add -
 
 RUN apt-get update
