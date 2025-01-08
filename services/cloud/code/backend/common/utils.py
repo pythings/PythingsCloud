@@ -39,29 +39,6 @@ def booleanize(*args, **kwargs):
             return False
 
 
-def send_email(to, subject, text):
-
-    # Importing here instead of on top avoids circular dependencies problems when loading booleanize in settings
-    from django.conf import settings
-    
-    if settings.BACKEND_EMAIL_SERVICE == 'Sendgrid':
-        import sendgrid
-        from sendgrid.helpers.mail import Email, Content, Mail
-
-        sg = sendgrid.SendGridAPIClient(apikey=settings.BACKEND_EMAIL_APIKEY)
-        from_email = Email(settings.BACKEND_EMAIL_FROM)
-        to_email = Email(to)
-        subject = subject
-        content = Content('text/plain', text)
-        mail = Mail(from_email, subject, to_email, content)
-        
-        # Send the email
-        response = sg.client.mail.send.post(request_body=mail.get())
-        
-        # Log. Also response.body and response.headers are available
-        logger.debug('Sent email, response statuc code: {}'.format(response.status_code))
-    
-
 def format_exception(e, debug=False):
     
     # Importing here instead of on top avoids circular dependencies problems when loading booleanize in settings

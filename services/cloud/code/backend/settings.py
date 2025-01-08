@@ -131,17 +131,11 @@ FAVICONS_PATH =  os.environ.get('FAVICONS_PATH', None)
 LOGO_FILE =  os.environ.get('LOGO_FILE', None)
 CONTACT_EMAIL=os.environ.get('CONTACT_EMAIL', 'contact@pythings.local')
 INVITATION_CODE=os.environ.get('INVITATION_CODE', None)
-
-BACKEND_EMAIL_SERVICE = os.environ.get('BACKEND_EMAIL_SERVICE', 'Sendgrid')
-if not BACKEND_EMAIL_SERVICE in ['Sendgrid', None]:
-    raise ImproperlyConfigured('Invalid BACKEND_EMAIL_METHOD ("{}")'.format(BACKEND_EMAIL_SERVICE))
-BACKEND_EMAIL_FROM = os.environ.get('BACKEND_EMAIL_FROM', 'Pythings Cloud Local <cloud@pythings.local>')
-BACKEND_EMAIL_APIKEY = os.environ.get('BACKEND_EMAIL_APIKEY', None)
 try:
     TERMS_VERSION = float(os.environ.get('TERMS_VERSION', 1.0))
 except:
     raise ImproperlyConfigured('Invalid TERMS_VERSION ("{}"), must be float'.format(TERMS_VERSION)) from None
-  
+
 
 #===============================
 #  Logging
@@ -211,4 +205,14 @@ OS_VERSIONS.reverse()
 
 # Default timeout for PythingsOS API calls before declaring timeout
 CONTACT_TIMEOUT_TOLERANCE = 60
+
+# Email settings
+EMAIL_BACKEND = os.environ.get('BACKEND_EMAIL_TYPE', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.environ.get('BACKEND_EMAIL_HOST', None)
+EMAIL_PORT = int(os.environ.get('BACKEND_EMAIL_PORT', 587))
+EMAIL_USE_TLS = booleanize(os.environ.get('BACKEND_EMAIL_USE_TLS', True))
+EMAIL_USE_SSL = booleanize(os.environ.get('BACKEND_EMAIL_USE_SSL', False))
+EMAIL_HOST_USER = os.environ.get('BACKEND_EMAIL_HOST_USER', None)
+EMAIL_HOST_PASSWORD = os.environ.get('BACKEND_EMAIL_HOST_PASSWORD', None)
+DEFAULT_FROM_EMAIL = os.environ.get('BACKEND_EMAIL_FROM', 'Pythings Local <notifications@pythings.local>')
 

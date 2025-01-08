@@ -13,10 +13,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.views.decorators.clickjacking import xframe_options_exempt
+from django.core.mail import send_mail
 
 # Backend imports
 from ..common.decorators import private_view, public_view
-from ..common.utils import booleanize, format_exception, send_email, random_username
+from ..common.utils import booleanize, format_exception, random_username
 from ..common.exceptions import ErrorMessage
 from ..common.time import timezonize, s_from_dt, dt, dt_from_s
 from ..base_app.models import LoginToken
@@ -116,9 +117,15 @@ def user_login(request):
                 else:
                     loginToken.token = token
                     loginToken.save()
-                
-                send_email(to=user.email, subject='Pythings Cloud login link', text='Hello,\n\nhere is your login link: {}/login/?token={}\n\nOnce logged in, you can go to "My Account" and change password (or just keep using the login link feature).'.format(settings.MAIN_DOMAIN_NAME, token))
-               
+
+                send_mail(
+                    subject = 'Pythings Cloud login link',
+                    message = 'Hello,\n\nhere is your login link: {}/login/?token={}\n\nOnce logged in, you can go to "My Account" and change password (or just keep using the login link feature).'.format(settings.MAIN_DOMAIN_NAME, token),
+                    from_email = 'Emberly <notifications@emberly.live>',
+                    recipient_list = [user.email],
+                    fail_silently=False,
+                )
+
                 # Return here, we don't want to give any hints about existing users
                 data['success'] = 'Ok, you will shortly receive a login link by email (if we have your data).'
                 return render(request, 'login.html', {'data': data})
